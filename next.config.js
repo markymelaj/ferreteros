@@ -6,6 +6,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'placehold.co' }
     ]
+  },
+  async redirects() {
+    return [
+      { source: '/catalogo', destination: '/materiales', permanent: true }
+    ];
   }
 };
 

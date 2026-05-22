@@ -89,7 +89,7 @@ export default async function ProductoPage({
       <nav className="flex items-center gap-1 text-xs uppercase font-display tracking-wider text-navy/60 mb-6 flex-wrap">
         <Link href="/" className="hover:text-ember">Inicio</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/catalogo" className="hover:text-ember">Catálogo</Link>
+        <Link href="/materiales" className="hover:text-ember">Materiales</Link>
         {product.categoria && (
           <>
             <ChevronRight className="w-3 h-3" />

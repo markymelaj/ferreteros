@@ -38,10 +38,10 @@ export function CartCheckout({ settings }: { settings: Settings }) {
           Tu carrito está vacío
         </h2>
         <p className="text-navy/60 mb-5">
-          Agrega productos desde el catálogo para cotizar.
+          Agrega productos desde el materiales para cotizar.
         </p>
-        <Link href="/catalogo" className="btn-brutal">
-          Ir al Catálogo
+        <Link href="/materiales" className="btn-brutal">
+          Ir al Materiales
         </Link>
       </div>
     );

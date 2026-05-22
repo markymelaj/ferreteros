@@ -8,7 +8,7 @@ import { formatPhoneDisplay } from '@/lib/format';
 import type { Settings } from '@/lib/types';
 
 const NAV = [
-  { href: '/catalogo', label: 'Catálogo' },
+  { href: '/materiales', label: 'Materiales' },
   { href: '/aridos', label: 'Áridos' },
   { href: '/arriendo', label: 'Arriendo' },
   { href: '/contacto', label: 'Contacto' }

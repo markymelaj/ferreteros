@@ -29,7 +29,7 @@ export function Footer({ settings }: { settings: Settings | null }) {
             Tienda
           </h4>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/catalogo"   className="hover:text-ember">Catálogo completo</Link></li>
+            <li><Link href="/materiales"   className="hover:text-ember">Materiales</Link></li>
             <li><Link href="/aridos"     className="hover:text-ember">Áridos</Link></li>
             <li><Link href="/arriendo"   className="hover:text-ember">Arriendo de maquinaria</Link></li>
             <li><Link href="/contacto"   className="hover:text-ember">Contacto</Link></li>

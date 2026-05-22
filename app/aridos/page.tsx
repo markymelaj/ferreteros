@@ -34,21 +34,21 @@ export default async function AridosPage() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 py-12 grid lg:grid-cols-[1fr_400px] gap-8 items-start">
-        <div>
-          <h2 className="font-display uppercase text-2xl text-navy mb-5">
-            Tipos disponibles
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {aridos.map((a) => (
-              <ProductCard key={a.id} product={a} />
-            ))}
-          </div>
-        </div>
+      {/* CALCULADORA — parte superior, full-width contenida */}
+      <section className="max-w-3xl mx-auto px-4 -mt-8 mb-12 relative z-10">
+        <AridosCalculator aridos={aridos} />
+      </section>
 
-        <aside className="lg:sticky lg:top-24">
-          <AridosCalculator aridos={aridos} />
-        </aside>
+      {/* LISTADO COMPLETO */}
+      <section className="max-w-7xl mx-auto px-4 pb-16">
+        <h2 className="font-display uppercase text-2xl text-navy mb-5">
+          Tipos disponibles
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {aridos.map((a) => (
+            <ProductCard key={a.id} product={a} />
+          ))}
+        </div>
       </section>
     </>
   );

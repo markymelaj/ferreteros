@@ -51,7 +51,7 @@ export default async function CategoriaPage({
       <nav className="flex items-center gap-1 text-xs uppercase font-display tracking-wider text-navy/60 mb-4">
         <Link href="/" className="hover:text-ember">Inicio</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/catalogo" className="hover:text-ember">Catálogo</Link>
+        <Link href="/materiales" className="hover:text-ember">Materiales</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-navy">{cat.nombre}</span>
       </nav>

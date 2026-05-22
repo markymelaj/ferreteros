@@ -3,6 +3,7 @@ import { ArrowRight, Truck, Hammer, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryGrid } from '@/components/CategoryGrid';
+import { AridosCalculator } from '@/components/AridosCalculator';
 import { formatCLP, whatsappLink } from '@/lib/format';
 import type { Product, Category, Maquinaria, Settings } from '@/lib/types';
 
@@ -27,15 +28,15 @@ export default async function Home() {
         .select('*')
         .eq('activo', true)
         .eq('tipo', 'arido')
-        .order('precio')
-        .limit(4),
+        .order('precio'),
       supabase.from('settings').select('*').eq('id', 1).single()
     ]);
 
   const destacados = (destacadosData ?? []) as Product[];
   const categorias = (cats ?? []) as Category[];
   const maquinaria = (maquinas ?? []) as Maquinaria[];
-  const aridosHome = (aridosData ?? []) as Product[];
+  const aridosAll = (aridosData ?? []) as Product[];
+  const aridosHome = aridosAll.slice(0, 4);
   const s = settings as Settings | null;
 
   return (
@@ -58,8 +59,8 @@ export default async function Home() {
               Camino Paraguay para toda la zona de Saltos del Laja y alrededores.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/catalogo" className="btn-brutal">
-                Ver Catálogo <ArrowRight className="w-4 h-4" />
+              <Link href="/materiales" className="btn-brutal">
+                Ver Materiales <ArrowRight className="w-4 h-4" />
               </Link>
               <a
                 href={whatsappLink(
@@ -112,8 +113,8 @@ export default async function Home() {
               Todo lo que necesitas
             </h2>
           </div>
-          <Link href="/catalogo" className="hidden md:flex items-center gap-1 font-display uppercase text-sm text-navy hover:text-ember">
-            Ver catálogo <ArrowRight className="w-4 h-4" />
+          <Link href="/materiales" className="hidden md:flex items-center gap-1 font-display uppercase text-sm text-navy hover:text-ember">
+            Ver materiales <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
         <CategoryGrid categories={categorias} />
@@ -131,7 +132,7 @@ export default async function Home() {
                 Productos destacados
               </h2>
             </div>
-            <Link href="/catalogo" className="hidden md:flex items-center gap-1 font-display uppercase text-sm text-navy hover:text-ember">
+            <Link href="/materiales" className="hidden md:flex items-center gap-1 font-display uppercase text-sm text-navy hover:text-ember">
               Todos <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -143,40 +144,46 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ÁRIDOS BANNER */}
-      <section className="max-w-7xl mx-auto px-4 py-16 grid lg:grid-cols-2 gap-8 items-center">
-        <div>
-          <span className="font-display uppercase text-xs tracking-widest text-ember">
-            Áridos por m³
-          </span>
-          <h2 className="font-display uppercase text-3xl md:text-4xl text-navy mb-3">
-            Arena, gravilla, ripio, bolón.
-          </h2>
-          <p className="text-navy/70 mb-5 leading-relaxed">
-            Todo el material para tu obra al volumen que necesites. Calcula
-            cuántos metros cúbicos requieres y obtén un estimado al toque.
-          </p>
-          <Link href="/aridos" className="btn-brutal">
-            Ir a Áridos <ArrowRight className="w-4 h-4" />
+      {/* ÁRIDOS + CALCULADORA */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <span className="font-display uppercase text-xs tracking-widest text-ember">
+              Áridos por m³
+            </span>
+            <h2 className="font-display uppercase text-3xl md:text-4xl text-navy mb-2">
+              Arena, gravilla, ripio, bolón.
+            </h2>
+            <p className="text-navy/70 max-w-xl leading-relaxed">
+              Calcula cuántos metros cúbicos necesitas para tu obra y obtén un
+              estimado al toque.
+            </p>
+          </div>
+          <Link href="/aridos" className="btn-ghost shrink-0">
+            Ver todos los áridos <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {aridosHome.map((a, i) => {
-            const price = a.precio_oferta && a.precio_oferta < a.precio ? a.precio_oferta : a.precio;
-            return (
-              <Link
-                key={a.id}
-                href={`/aridos`}
-                className="aspect-square bg-navy text-sand border-2 border-navy p-4 flex flex-col justify-end relative overflow-hidden group hover:bg-navy-900 transition-colors"
-              >
-                <div className="absolute top-2 right-2 font-display text-[10px] uppercase tracking-wider text-ember">
-                  0{i + 1}
-                </div>
-                <span className="font-display uppercase text-xl leading-tight">{a.nombre}</span>
-                <span className="text-xs text-sand/70 mt-1">desde {formatCLP(price)}/m³</span>
-              </Link>
-            );
-          })}
+
+        <div className="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
+          <div className="grid grid-cols-2 gap-3">
+            {aridosHome.map((a, i) => {
+              const price = a.precio_oferta && a.precio_oferta < a.precio ? a.precio_oferta : a.precio;
+              return (
+                <Link
+                  key={a.id}
+                  href={`/aridos`}
+                  className="aspect-square bg-navy text-sand border-2 border-navy p-4 flex flex-col justify-end relative overflow-hidden group hover:bg-navy-900 transition-colors"
+                >
+                  <div className="absolute top-2 right-2 font-display text-[10px] uppercase tracking-wider text-ember">
+                    0{i + 1}
+                  </div>
+                  <span className="font-display uppercase text-xl leading-tight">{a.nombre}</span>
+                  <span className="text-xs text-sand/70 mt-1">desde {formatCLP(price)}/m³</span>
+                </Link>
+              );
+            })}
+          </div>
+          <AridosCalculator aridos={aridosAll} />
         </div>
       </section>
 
