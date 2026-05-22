@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { formatCLP, effectivePrice, discountPct } from '@/lib/format';
@@ -29,11 +30,12 @@ export function ProductCard({ product }: { product: Product }) {
         className="block aspect-square bg-sand-dark border-b-2 border-navy relative overflow-hidden"
       >
         {product.imagen_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.imagen_url}
             alt={product.nombre}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center font-display text-navy/15 text-6xl select-none">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
 import { formatCLP, whatsappLink } from '@/lib/format';
@@ -49,14 +50,15 @@ export default async function ArriendoPage() {
             >
               <Link
                 href={`/arriendo/${m.slug}`}
-                className="aspect-[4/3] bg-sand-dark border-b-2 border-navy flex items-center justify-center"
+                className="aspect-[4/3] bg-sand-dark border-b-2 border-navy flex items-center justify-center relative overflow-hidden"
               >
                 {m.imagen_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={m.imagen_url}
                     alt={m.nombre}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
                   />
                 ) : (
                   <span className="font-display text-7xl text-navy/15 select-none">

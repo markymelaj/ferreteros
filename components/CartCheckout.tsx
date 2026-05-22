@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Minus, Plus, Trash2, MessageCircle, FileDown, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { formatCLP, whatsappLink } from '@/lib/format';
@@ -123,11 +124,16 @@ export function CartCheckout({ settings }: { settings: Settings }) {
             >
               <Link
                 href={`/producto/${it.slug}`}
-                className="w-full sm:w-20 h-20 bg-sand-dark border-2 border-navy shrink-0 flex items-center justify-center font-display text-navy/30 text-2xl"
+                className="relative w-full sm:w-20 h-20 bg-sand-dark border-2 border-navy shrink-0 flex items-center justify-center font-display text-navy/30 text-2xl overflow-hidden"
               >
                 {it.imagen_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={it.imagen_url} alt={it.nombre} className="w-full h-full object-cover" />
+                  <Image
+                    src={it.imagen_url}
+                    alt={it.nombre}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
                 ) : (
                   it.nombre.charAt(0)
                 )}

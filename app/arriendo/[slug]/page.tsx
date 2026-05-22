@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ChevronRight, ShieldCheck, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
@@ -51,10 +52,16 @@ export default async function MaquinaPage({
       </nav>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="aspect-square bg-white border-2 border-navy flex items-center justify-center">
+        <div className="aspect-square bg-white border-2 border-navy flex items-center justify-center relative overflow-hidden">
           {m.imagen_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.imagen_url} alt={m.nombre} className="w-full h-full object-cover" />
+            <Image
+              src={m.imagen_url}
+              alt={m.nombre}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
           ) : (
             <span className="font-display text-[12rem] text-navy/15 select-none">
               {m.nombre.charAt(0)}

@@ -53,9 +53,37 @@ export default async function RootLayout({
   const supabase = createClient();
   const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).single();
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ferreteria-piloto.vercel.app';
+  const localBusinessLd = settings ? {
+    '@context': 'https://schema.org',
+    '@type': 'HardwareStore',
+    name: settings.nombre_ferreteria,
+    description: settings.descripcion_seo,
+    url: baseUrl,
+    telephone: settings.telefono_whatsapp,
+    email: settings.email,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: settings.direccion_fisica,
+      addressLocality: 'Los Ángeles',
+      addressRegion: 'Región del Biobío',
+      addressCountry: 'CL'
+    },
+    areaServed: (settings.comunas_despacho ?? []).map((c: string) => ({
+      '@type': 'City', name: c
+    })),
+    priceRange: '$$'
+  } : null;
+
   return (
     <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body className="font-body min-h-screen flex flex-col">
+        {localBusinessLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}
+          />
+        )}
         <CartProvider>
           <Header settings={settings} />
           <main className="flex-1">{children}</main>

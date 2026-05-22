@@ -11,7 +11,7 @@ export const revalidate = 60;
 export default async function Home() {
   const supabase = createClient();
 
-  const [{ data: destacadosData }, { data: cats }, { data: maquinas }, { data: settings }] =
+  const [{ data: destacadosData }, { data: cats }, { data: maquinas }, { data: aridosData }, { data: settings }] =
     await Promise.all([
       supabase
         .from('products')
@@ -22,12 +22,20 @@ export default async function Home() {
         .limit(8),
       supabase.from('categories').select('*').eq('activo', true).order('orden'),
       supabase.from('maquinaria').select('*').eq('activo', true).limit(3),
+      supabase
+        .from('products')
+        .select('*')
+        .eq('activo', true)
+        .eq('tipo', 'arido')
+        .order('precio')
+        .limit(4),
       supabase.from('settings').select('*').eq('id', 1).single()
     ]);
 
   const destacados = (destacadosData ?? []) as Product[];
   const categorias = (cats ?? []) as Category[];
   const maquinaria = (maquinas ?? []) as Maquinaria[];
+  const aridosHome = (aridosData ?? []) as Product[];
   const s = settings as Settings | null;
 
   return (
@@ -117,10 +125,10 @@ export default async function Home() {
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="font-display uppercase text-xs tracking-widest text-ember">
-                Ofertas y destacados
+                Ofertas y selección
               </span>
               <h2 className="font-display uppercase text-3xl md:text-4xl text-navy">
-                Lo que se mueve esta semana
+                Productos destacados
               </h2>
             </div>
             <Link href="/catalogo" className="hidden md:flex items-center gap-1 font-display uppercase text-sm text-navy hover:text-ember">
@@ -153,18 +161,22 @@ export default async function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {['Arena Gruesa', 'Gravilla 1/2"', 'Ripio Camino', 'Bolón'].map((n, i) => (
-            <div
-              key={n}
-              className="aspect-square bg-navy text-sand border-2 border-navy p-4 flex flex-col justify-end relative overflow-hidden"
-            >
-              <div className="absolute top-2 right-2 font-display text-[10px] uppercase tracking-wider text-ember">
-                0{i + 1}
-              </div>
-              <span className="font-display uppercase text-xl leading-tight">{n}</span>
-              <span className="text-xs text-sand/70 mt-1">desde {formatCLP(18000)}/m³</span>
-            </div>
-          ))}
+          {aridosHome.map((a, i) => {
+            const price = a.precio_oferta && a.precio_oferta < a.precio ? a.precio_oferta : a.precio;
+            return (
+              <Link
+                key={a.id}
+                href={`/aridos`}
+                className="aspect-square bg-navy text-sand border-2 border-navy p-4 flex flex-col justify-end relative overflow-hidden group hover:bg-navy-900 transition-colors"
+              >
+                <div className="absolute top-2 right-2 font-display text-[10px] uppercase tracking-wider text-ember">
+                  0{i + 1}
+                </div>
+                <span className="font-display uppercase text-xl leading-tight">{a.nombre}</span>
+                <span className="text-xs text-sand/70 mt-1">desde {formatCLP(price)}/m³</span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

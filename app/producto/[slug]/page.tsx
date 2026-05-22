@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ChevronRight, Tag, Package, Truck } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
@@ -53,8 +54,38 @@ export default async function ProductoPage({
   const price = effectivePrice(product.precio, product.precio_oferta);
   const desc = discountPct(product.precio, product.precio_oferta);
 
+  const availabilityMap: Record<string, string> = {
+    disponible: 'https://schema.org/InStock',
+    bajo_stock: 'https://schema.org/LimitedAvailability',
+    sin_stock: 'https://schema.org/OutOfStock',
+    consultar: 'https://schema.org/PreOrder'
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: product.nombre,
+    description: product.descripcion ?? `${product.nombre} disponible en Nexo Sur.`,
+    sku: product.sku ?? undefined,
+    image: product.imagen_url ? [product.imagen_url] : undefined,
+    category: product.categoria?.nombre,
+    brand: { '@type': 'Brand', name: 'Nexo Sur' },
+    offers: {
+      '@type': 'Offer',
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/producto/${product.slug}`,
+      priceCurrency: 'CLP',
+      price: price,
+      availability: availabilityMap[product.stock_estado] ?? 'https://schema.org/InStock',
+      seller: { '@type': 'Organization', name: 'Nexo Sur' }
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav className="flex items-center gap-1 text-xs uppercase font-display tracking-wider text-navy/60 mb-6 flex-wrap">
         <Link href="/" className="hover:text-ember">Inicio</Link>
         <ChevronRight className="w-3 h-3" />
@@ -75,11 +106,13 @@ export default async function ProductoPage({
       <div className="grid lg:grid-cols-2 gap-8 mb-16">
         <div className="aspect-square bg-white border-2 border-navy relative overflow-hidden">
           {product.imagen_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={product.imagen_url}
               alt={product.nombre}
-              className="w-full h-full object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center font-display text-navy/15 text-[12rem] select-none">
