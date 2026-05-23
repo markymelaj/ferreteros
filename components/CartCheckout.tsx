@@ -32,16 +32,16 @@ export function CartCheckout({ settings }: { settings: Settings }) {
 
   if (count === 0) {
     return (
-      <div className="bg-white border-2 border-navy p-10 text-center">
-        <ShoppingBag className="w-12 h-12 text-navy/30 mx-auto mb-4" />
-        <h2 className="font-display uppercase text-2xl text-navy mb-2">
+      <div className="bg-white rounded-card shadow-card p-10 text-center">
+        <ShoppingBag className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-text-primary mb-2">
           Tu carrito está vacío
         </h2>
-        <p className="text-navy/60 mb-5">
-          Agrega productos desde el materiales para cotizar.
+        <p className="text-sm text-text-secondary mb-5">
+          Agrega productos desde el catálogo para cotizar.
         </p>
-        <Link href="/materiales" className="btn-brutal">
-          Ir al Materiales
+        <Link href="/materiales" className="btn-primary">
+          Ir a Materiales
         </Link>
       </div>
     );
@@ -64,7 +64,6 @@ export function CartCheckout({ settings }: { settings: Settings }) {
       observaciones: form.observaciones.trim() || undefined
     };
 
-    // Registrar presupuesto en backend (best-effort)
     let numero = `${Date.now().toString().slice(-6)}`;
     try {
       const res = await fetch('/api/presupuestos', {
@@ -80,7 +79,6 @@ export function CartCheckout({ settings }: { settings: Settings }) {
       console.error('No se pudo registrar el presupuesto', err);
     }
 
-    // Generar PDF y descargar
     try {
       const blob = await generateQuotePDF(quote, settings, numero);
       const url = URL.createObjectURL(blob);
@@ -93,7 +91,6 @@ export function CartCheckout({ settings }: { settings: Settings }) {
       console.error('Error generando PDF', err);
     }
 
-    // Abrir WhatsApp
     const msg = buildWhatsappMessage(quote, settings);
     const link = whatsappLink(settings.telefono_whatsapp, msg);
     window.open(link, '_blank');
@@ -102,17 +99,17 @@ export function CartCheckout({ settings }: { settings: Settings }) {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
-      <div className="bg-white border-2 border-navy">
-        <div className="px-5 py-3 border-b-2 border-navy flex items-center justify-between">
-          <h2 className="font-display uppercase text-navy">
+    <div className="grid lg:grid-cols-[1fr_380px] gap-4 items-start">
+      <div className="bg-white rounded-card shadow-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="font-semibold text-text-primary">
             Productos ({count})
           </h2>
           <button
             onClick={clear}
-            className="text-xs uppercase font-display tracking-wider text-navy/60 hover:text-red-600 flex items-center gap-1"
+            className="text-xs text-text-secondary hover:text-danger flex items-center gap-1"
           >
-            <Trash2 className="w-3 h-3" /> Vaciar
+            <Trash2 className="w-3 h-3" /> Vaciar carrito
           </button>
         </div>
 
@@ -120,39 +117,35 @@ export function CartCheckout({ settings }: { settings: Settings }) {
           {items.map((it) => (
             <li
               key={it.id}
-              className="flex flex-col sm:flex-row gap-3 p-4 border-b border-navy/10 last:border-0"
+              className="flex flex-col sm:flex-row gap-3 p-4 border-b border-gray-100 last:border-0"
             >
               <Link
                 href={`/producto/${it.slug}`}
-                className="relative w-full sm:w-20 h-20 bg-sand-dark border-2 border-navy shrink-0 flex items-center justify-center font-display text-navy/30 text-2xl overflow-hidden"
+                className="relative w-full sm:w-24 h-24 bg-bg-sub rounded shrink-0 overflow-hidden"
               >
                 {it.imagen_url ? (
-                  <Image
-                    src={it.imagen_url}
-                    alt={it.nombre}
-                    fill
-                    sizes="80px"
-                    className="object-cover"
-                  />
+                  <Image src={it.imagen_url} alt={it.nombre} fill sizes="96px" className="object-contain p-1" />
                 ) : (
-                  it.nombre.charAt(0)
+                  <div className="w-full h-full flex items-center justify-center text-2xl text-text-tertiary">
+                    {it.nombre.charAt(0)}
+                  </div>
                 )}
               </Link>
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/producto/${it.slug}`}
-                  className="font-display uppercase text-sm text-navy hover:text-ember line-clamp-2"
+                  className="text-sm font-semibold text-text-primary hover:text-text-link line-clamp-2"
                 >
                   {it.nombre}
                 </Link>
-                <p className="text-xs text-navy/60 mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {formatCLP(it.precio)} por {it.unidad}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <div className="inline-flex items-center border-2 border-navy">
+                  <div className="inline-flex items-center border border-gray-300 rounded">
                     <button
                       onClick={() => setQty(it.id, it.cantidad - (it.tipo === 'arido' ? 0.5 : 1))}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-navy hover:text-sand"
+                      className="w-8 h-8 flex items-center justify-center hover:bg-bg-sub text-text-secondary"
                       aria-label="Restar"
                     >
                       <Minus className="w-3 h-3" />
@@ -163,29 +156,29 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                       step={it.tipo === 'arido' ? 0.5 : 1}
                       value={it.cantidad}
                       onChange={(e) => setQty(it.id, parseFloat(e.target.value) || (it.tipo === 'arido' ? 0.5 : 1))}
-                      className="w-14 h-8 text-center bg-transparent border-x-2 border-navy text-sm font-semibold focus:outline-none"
+                      className="w-14 h-8 text-center text-sm text-text-primary bg-transparent border-x border-gray-300 focus:outline-none"
                     />
                     <button
                       onClick={() => setQty(it.id, it.cantidad + (it.tipo === 'arido' ? 0.5 : 1))}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-navy hover:text-sand"
+                      className="w-8 h-8 flex items-center justify-center hover:bg-bg-sub text-text-secondary"
                       aria-label="Sumar"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
-                  <span className="text-xs text-navy/60">
+                  <span className="text-xs text-text-secondary">
                     {it.tipo === 'arido' ? 'm³' : it.unidad}
                   </span>
                   <button
                     onClick={() => remove(it.id)}
-                    className="ml-auto text-xs text-red-600 hover:underline flex items-center gap-1"
+                    className="ml-auto text-xs text-text-link hover:underline"
                   >
-                    <Trash2 className="w-3 h-3" /> Quitar
+                    Eliminar
                   </button>
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <span className="font-display text-lg text-navy">
+                <span className="text-lg font-semibold text-text-primary">
                   {formatCLP(it.precio * it.cantidad)}
                 </span>
               </div>
@@ -194,19 +187,16 @@ export function CartCheckout({ settings }: { settings: Settings }) {
         </ul>
       </div>
 
-      <aside className="lg:sticky lg:top-24 space-y-5">
-        <div className="bg-white border-2 border-navy p-5">
-          <h3 className="font-display uppercase text-lg text-navy mb-4">
-            Datos de despacho
-          </h3>
+      <aside className="lg:sticky lg:top-32 space-y-4">
+        <div className="bg-white rounded-card shadow-card p-4">
+          <h3 className="font-semibold text-text-primary mb-3">Datos de despacho</h3>
           <div className="space-y-3">
             <div>
-              <label className="label">Nombre *</label>
+              <label className="label">Nombre completo *</label>
               <input
                 className="input"
                 value={form.cliente_nombre}
                 onChange={(e) => setForm({ ...form, cliente_nombre: e.target.value })}
-                placeholder="Tu nombre completo"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -227,7 +217,6 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                   type="email"
                   value={form.cliente_email}
                   onChange={(e) => setForm({ ...form, cliente_email: e.target.value })}
-                  placeholder="opcional"
                 />
               </div>
             </div>
@@ -244,7 +233,7 @@ export function CartCheckout({ settings }: { settings: Settings }) {
               </select>
             </div>
             <div>
-              <label className="label">Dirección de despacho *</label>
+              <label className="label">Dirección *</label>
               <input
                 className="input"
                 value={form.direccion_despacho}
@@ -258,30 +247,29 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                 className="input min-h-[60px]"
                 value={form.observaciones}
                 onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
-                placeholder="Horario preferido, indicaciones, etc."
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-navy text-sand border-2 border-navy p-5">
-          <h3 className="font-display uppercase text-lg mb-4">Resumen</h3>
-          <dl className="space-y-1 text-sm">
-            <div className="flex justify-between">
+        <div className="bg-white rounded-card shadow-card p-4">
+          <h3 className="font-semibold text-text-primary mb-3">Resumen</h3>
+          <dl className="space-y-1.5 text-sm">
+            <div className="flex justify-between text-text-secondary">
               <dt>Subtotal neto</dt>
               <dd>{formatCLP(subtotal)}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-text-secondary">
               <dt>IVA {settings.iva_pct}%</dt>
               <dd>{formatCLP(iva)}</dd>
             </div>
-            <div className="flex justify-between items-end border-t border-sand/30 pt-2 mt-2">
-              <dt className="font-display uppercase">Total</dt>
-              <dd className="font-display text-2xl text-ember">{formatCLP(total)}</dd>
+            <div className="flex justify-between items-end border-t border-gray-200 pt-2 mt-2">
+              <dt className="font-semibold text-text-primary">Total</dt>
+              <dd className="text-2xl font-light text-text-primary">{formatCLP(total)}</dd>
             </div>
           </dl>
-          <p className="text-xs text-sand/60 mt-3">
-            Costo de despacho a confirmar según comuna y volumen.
+          <p className="text-2xs text-text-secondary mt-2">
+            Despacho se confirma según comuna y volumen.
           </p>
 
           <button
@@ -292,8 +280,8 @@ export function CartCheckout({ settings }: { settings: Settings }) {
             <MessageCircle className="w-4 h-4" />
             {sending ? 'Enviando…' : 'Enviar cotización por WhatsApp'}
           </button>
-          <p className="text-[11px] text-sand/60 mt-2 flex items-center justify-center gap-1">
-            <FileDown className="w-3 h-3" /> Se descargará el PDF automáticamente
+          <p className="text-2xs text-text-secondary mt-2 flex items-center justify-center gap-1">
+            <FileDown className="w-3 h-3" /> Se descargará un PDF con tu cotización
           </p>
         </div>
       </aside>

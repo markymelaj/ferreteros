@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Archivo_Black, Manrope } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/lib/cart';
 import { Header } from '@/components/Header';
@@ -7,17 +7,10 @@ import { Footer } from '@/components/Footer';
 import { WhatsAppFloat } from '@/components/WhatsAppFloat';
 import { createClient } from '@/lib/supabase-server';
 
-const display = Archivo_Black({
+const sans = Inter({
   subsets: ['latin'],
-  weight: '400',
-  variable: '--font-display',
-  display: 'swap'
-});
-
-const body = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-body',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap'
 });
 
@@ -34,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ferreteria-piloto.vercel.app'),
-    title: { default: `${nombre} — Ferretería · Áridos · Arriendo`, template: `%s · ${nombre}` },
+    title: { default: `${nombre} — Ferretería · Áridos · Arriendo`, template: `%s | ${nombre}` },
     description: desc,
     openGraph: {
       title: nombre,
@@ -76,8 +69,8 @@ export default async function RootLayout({
   } : null;
 
   return (
-    <html lang="es" className={`${display.variable} ${body.variable}`}>
-      <body className="font-body min-h-screen flex flex-col">
+    <html lang="es" className={sans.variable}>
+      <body className="font-sans min-h-screen flex flex-col">
         {localBusinessLd && (
           <script
             type="application/ld+json"

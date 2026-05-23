@@ -3,22 +3,21 @@ import { ArrowLeft, Hammer } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-grit">
-      <div className="text-center max-w-md">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-ember border-2 border-navy mb-6">
-          <Hammer className="w-10 h-10 text-navy" />
+    <div className="bg-bg-page min-h-[70vh] flex items-center justify-center px-4 py-16">
+      <div className="bg-white rounded-card shadow-card p-10 text-center max-w-md">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-50 rounded-full mb-4">
+          <Hammer className="w-8 h-8 text-brand-600" />
         </div>
-        <p className="font-display uppercase text-xs tracking-widest text-ember mb-2">
+        <p className="text-xs uppercase tracking-widest text-text-secondary mb-2">
           Error 404
         </p>
-        <h1 className="font-display uppercase text-5xl md:text-6xl text-navy mb-3 leading-none">
+        <h1 className="text-2xl font-bold text-text-primary mb-2">
           Página no encontrada
         </h1>
-        <p className="text-navy/70 mb-6">
-          La página que buscas se mudó, fue demolida o nunca existió.
-          Volvamos a la obra.
+        <p className="text-sm text-text-secondary mb-5">
+          La página que buscas no existe o se movió.
         </p>
-        <Link href="/" className="btn-brutal">
+        <Link href="/" className="btn-primary">
           <ArrowLeft className="w-4 h-4" /> Volver al inicio
         </Link>
       </div>

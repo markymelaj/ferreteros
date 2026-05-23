@@ -3,79 +3,103 @@
 @tailwind utilities;
 
 :root {
-  --color-navy: #0b2545;
-  --color-ember: #f77f00;
-  --color-sand: #f5efe6;
-  --color-ink: #0a0a0a;
+  --brand: #FFB800;
+  --ink: #003566;
+  --page: #EBEBEB;
+  --card: #FFFFFF;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--color-sand);
-  color: var(--color-ink);
+  background: var(--page);
+  color: #262626;
   font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Patrón sutil de fondo para secciones hero */
-.bg-grit {
-  background-image: radial-gradient(
-      rgba(11, 37, 69, 0.07) 1px,
-      transparent 1px
-    ),
-    radial-gradient(rgba(11, 37, 69, 0.04) 1px, transparent 1px);
-  background-size: 18px 18px, 9px 9px;
-  background-position: 0 0, 4px 4px;
+/* Botones */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 font-semibold rounded transition-colors;
 }
-
-/* Botones brutalistas con sombra dura */
-.btn-brutal {
-  @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-display tracking-wide uppercase text-sm border-2 border-navy bg-ember text-navy shadow-brutal-sm transition-all;
+.btn-primary {
+  @apply btn px-5 py-2.5 bg-text-link text-white hover:bg-blue-600 text-sm;
 }
-.btn-brutal:hover {
-  @apply -translate-x-[2px] -translate-y-[2px];
-  box-shadow: 8px 8px 0 0 rgba(11, 37, 69, 1);
+.btn-secondary {
+  @apply btn px-5 py-2.5 bg-blue-50 text-text-link hover:bg-blue-100 text-sm;
 }
-.btn-brutal:active {
-  @apply translate-x-0 translate-y-0;
-  box-shadow: 2px 2px 0 0 rgba(11, 37, 69, 1);
-}
-
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 px-5 py-3 font-display tracking-wide uppercase text-sm border-2 border-navy bg-transparent text-navy transition-colors hover:bg-navy hover:text-sand;
-}
-
 .btn-wa {
-  @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-display tracking-wide uppercase text-sm border-2 border-navy bg-whatsapp text-white shadow-brutal-sm transition-all;
+  @apply btn px-5 py-2.5 bg-wa text-white hover:bg-green-600 text-sm;
 }
-.btn-wa:hover {
-  @apply -translate-x-[2px] -translate-y-[2px];
-  box-shadow: 8px 8px 0 0 rgba(11, 37, 69, 1);
+.btn-outline {
+  @apply btn px-5 py-2.5 bg-white text-text-link border border-text-link hover:bg-blue-50 text-sm;
+}
+.btn-ghost {
+  @apply btn px-3 py-1.5 bg-transparent text-text-secondary hover:bg-gray-100 text-sm;
 }
 
-/* Tag de oferta diagonal */
-.tag-offer {
-  @apply absolute top-3 left-3 bg-ember text-navy font-display uppercase text-xs px-2 py-1 tracking-wider rotate-[-4deg] border-2 border-navy;
+/* Card de producto base */
+.card {
+  @apply bg-bg-card rounded-card shadow-card hover:shadow-card-hover transition-shadow;
 }
 
 /* Inputs */
 .input {
-  @apply w-full border-2 border-navy bg-white px-3 py-2 font-body text-ink placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-ember focus:border-navy;
+  @apply w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-text-link focus:ring-1 focus:ring-text-link/30 transition-colors;
 }
 
 .label {
-  @apply block font-display uppercase text-xs tracking-wider text-navy mb-1;
+  @apply block text-xs font-semibold text-text-secondary mb-1;
 }
 
-/* Animación entrada hero */
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
+/* Badges estilo MELI */
+.badge {
+  @apply inline-flex items-center px-1.5 py-0.5 text-2xs font-semibold rounded-sm uppercase tracking-wide;
+}
+.badge-success { @apply badge bg-success text-white; }
+.badge-warning { @apply badge bg-warning text-white; }
+.badge-danger  { @apply badge bg-danger text-white; }
+.badge-info    { @apply badge bg-text-link text-white; }
+.badge-neutral { @apply badge bg-gray-700 text-white; }
+
+/* Discount tag */
+.tag-discount {
+  @apply text-success text-sm font-semibold;
+}
+.price-old {
+  @apply text-text-secondary text-xs line-through;
+}
+.price-current {
+  @apply text-text-primary text-2xl font-light;
+}
+
+/* Skeleton loaders */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Container helpers */
+.container-page {
+  @apply max-w-7xl mx-auto px-3 md:px-4;
+}
+
+/* Hide scrollbar pero scroll funciona (para tira de categorías) */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Animación entrada */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-slide-up {
-  animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
+.animate-fade-in { animation: fade-in 0.3s ease-out backwards; }

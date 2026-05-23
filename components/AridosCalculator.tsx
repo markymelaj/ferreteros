@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Minus, Check, ShoppingCart } from 'lucide-react';
+import { Plus, Minus, Check, ShoppingCart, Calculator } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { formatNumber, formatCLP, formatQty } from '@/lib/format';
 import type { Product } from '@/lib/types';
@@ -11,8 +11,8 @@ export function AridosCalculator({ aridos }: { aridos: Product[] }) {
   const [ancho, setAncho] = useState(3);
   const [prof, setProf] = useState(0.1);
   const [aridoId, setAridoId] = useState(aridos[0]?.id ?? '');
-  const [qty, setQty] = useState(1.2); // cantidad final a agregar (editable)
-  const [autoSync, setAutoSync] = useState(true); // si está activo, qty sigue al cálculo
+  const [qty, setQty] = useState(1.2);
+  const [autoSync, setAutoSync] = useState(true);
   const [added, setAdded] = useState(false);
 
   const { add } = useCart();
@@ -21,7 +21,6 @@ export function AridosCalculator({ aridos }: { aridos: Product[] }) {
   const m3 = useMemo(() => Math.max(0, largo * ancho * prof), [largo, ancho, prof]);
   const precioUnit = arido ? (arido.precio_oferta ?? arido.precio) : 0;
 
-  // Sincronizar qty con el cálculo si el usuario no la editó manualmente
   useEffect(() => {
     if (autoSync) {
       setQty(Math.max(0.5, Math.round(m3 * 100) / 100));
@@ -52,149 +51,140 @@ export function AridosCalculator({ aridos }: { aridos: Product[] }) {
   }
 
   return (
-    <div className="bg-white border-2 border-navy p-5 shadow-brutal-sm">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="font-display uppercase text-[10px] tracking-widest text-ember">
-          Calculadora
-        </span>
-      </div>
-      <h3 className="font-display uppercase text-xl text-navy mb-1">
-        Calcula tu volumen
-      </h3>
-      <p className="text-sm text-navy/70 mb-4">
-        Ingresa las dimensiones del área a cubrir.
-      </p>
-
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div>
-          <label className="label">Largo (m)</label>
-          <input
-            type="number" min={0.1} step={0.1}
-            value={largo}
-            onChange={(e) => setLargo(parseFloat(e.target.value) || 0)}
-            className="input"
-          />
-        </div>
-        <div>
-          <label className="label">Ancho (m)</label>
-          <input
-            type="number" min={0.1} step={0.1}
-            value={ancho}
-            onChange={(e) => setAncho(parseFloat(e.target.value) || 0)}
-            className="input"
-          />
-        </div>
-        <div>
-          <label className="label">Prof. (m)</label>
-          <input
-            type="number" min={0.05} step={0.05}
-            value={prof}
-            onChange={(e) => setProf(parseFloat(e.target.value) || 0)}
-            className="input"
-          />
-        </div>
+    <div className="bg-white rounded-card shadow-card overflow-hidden">
+      <div className="bg-bg-sub px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
+        <Calculator className="w-4 h-4 text-text-link" />
+        <h3 className="text-sm font-semibold text-text-primary">Calculadora de áridos</h3>
       </div>
 
-      <div className="mb-4">
-        <label className="label">Tipo de árido</label>
-        <select
-          value={aridoId}
-          onChange={(e) => setAridoId(e.target.value)}
-          className="input"
-        >
-          {aridos.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nombre} — {formatCLP(a.precio_oferta ?? a.precio)}/m³
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* RESULTADO + AJUSTE */}
-      <div className="bg-sand border-2 border-navy p-3 mb-3">
-        <div className="flex items-baseline justify-between mb-2">
-          <span className="text-[11px] uppercase font-display tracking-wider text-navy/60">
-            Volumen calculado
-          </span>
-          <span className="font-display text-2xl text-navy leading-none">
-            {formatNumber(m3)} m³
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 pt-2 border-t border-navy/20">
-          <span className="text-[11px] uppercase font-display tracking-wider text-navy/60 mr-auto">
-            Cantidad a pedir
-          </span>
-          <div className="flex items-center border-2 border-navy bg-white">
-            <button
-              type="button"
-              onClick={() => bumpQty(-0.5)}
-              className="w-8 h-9 flex items-center justify-center hover:bg-navy hover:text-sand"
-              aria-label="Restar 0.5 m³"
-            >
-              <Minus className="w-3 h-3" />
-            </button>
+      <div className="p-4">
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div>
+            <label className="label">Largo (m)</label>
             <input
-              type="number"
-              min={0.5} step={0.5}
-              value={qty}
-              onChange={(e) => {
-                setAutoSync(false);
-                setQty(Math.max(0.5, parseFloat(e.target.value) || 0.5));
-              }}
-              className="w-16 h-9 text-center bg-transparent border-x-2 border-navy font-display text-navy text-sm focus:outline-none"
+              type="number" min={0.1} step={0.1}
+              value={largo}
+              onChange={(e) => setLargo(parseFloat(e.target.value) || 0)}
+              className="input text-sm"
             />
-            <button
-              type="button"
-              onClick={() => bumpQty(0.5)}
-              className="w-8 h-9 flex items-center justify-center hover:bg-navy hover:text-sand"
-              aria-label="Sumar 0.5 m³"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
           </div>
-          <span className="font-display text-sm text-navy">m³</span>
+          <div>
+            <label className="label">Ancho (m)</label>
+            <input
+              type="number" min={0.1} step={0.1}
+              value={ancho}
+              onChange={(e) => setAncho(parseFloat(e.target.value) || 0)}
+              className="input text-sm"
+            />
+          </div>
+          <div>
+            <label className="label">Prof. (m)</label>
+            <input
+              type="number" min={0.05} step={0.05}
+              value={prof}
+              onChange={(e) => setProf(parseFloat(e.target.value) || 0)}
+              className="input text-sm"
+            />
+          </div>
         </div>
 
-        {!autoSync && (
-          <button
-            type="button"
-            onClick={() => setAutoSync(true)}
-            className="text-[10px] uppercase font-display tracking-wider text-ember hover:underline mt-2"
+        <div className="mb-3">
+          <label className="label">Tipo de árido</label>
+          <select
+            value={aridoId}
+            onChange={(e) => setAridoId(e.target.value)}
+            className="input text-sm"
           >
-            ⟲ Volver a usar el cálculo automático
-          </button>
-        )}
+            {aridos.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nombre} — {formatCLP(a.precio_oferta ?? a.precio)}/m³
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="bg-bg-sub rounded p-3 mb-3">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-2xs text-text-secondary uppercase">Volumen calculado</span>
+            <span className="text-xl font-light text-text-primary">{formatNumber(m3)} m³</span>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+            <span className="text-2xs text-text-secondary uppercase mr-auto">Cantidad a pedir</span>
+            <div className="flex items-center border border-gray-300 rounded bg-white">
+              <button
+                type="button"
+                onClick={() => bumpQty(-0.5)}
+                className="w-7 h-8 flex items-center justify-center text-text-secondary hover:bg-bg-sub"
+                aria-label="Restar 0.5 m³"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <input
+                type="number"
+                min={0.5} step={0.5}
+                value={qty}
+                onChange={(e) => {
+                  setAutoSync(false);
+                  setQty(Math.max(0.5, parseFloat(e.target.value) || 0.5));
+                }}
+                className="w-14 h-8 text-center text-sm font-semibold bg-transparent border-x border-gray-300 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => bumpQty(0.5)}
+                className="w-7 h-8 flex items-center justify-center text-text-secondary hover:bg-bg-sub"
+                aria-label="Sumar 0.5 m³"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+            <span className="text-2xs text-text-secondary">m³</span>
+          </div>
+
+          {!autoSync && (
+            <button
+              type="button"
+              onClick={() => setAutoSync(true)}
+              className="text-2xs text-text-link hover:underline mt-2"
+            >
+              ⟲ Volver al cálculo automático
+            </button>
+          )}
+        </div>
+
+        <div className="bg-brand-50 border border-brand-300 rounded p-3 flex items-center justify-between mb-3">
+          <span className="text-sm font-semibold text-text-primary">Estimado</span>
+          <span className="text-2xl font-light text-text-primary">
+            {formatCLP(estimado)}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!arido || qty <= 0}
+          className={`btn w-full px-5 py-2.5 text-sm font-semibold rounded ${
+            added
+              ? 'bg-success text-white'
+              : 'bg-text-link text-white hover:bg-blue-600'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {added ? (
+            <>
+              <Check className="w-4 h-4" /> Agregado: {formatQty(qty)} m³
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4" /> Agregar {formatQty(qty)} m³ al carrito
+            </>
+          )}
+        </button>
+
+        <p className="text-2xs text-text-tertiary mt-2 italic">
+          * Precio referencial IVA incluido. Despacho se cotiza según comuna y volumen.
+        </p>
       </div>
-
-      {/* TOTAL + CTA */}
-      <div className="bg-ember border-2 border-navy p-3 flex items-center justify-between mb-3">
-        <span className="font-display uppercase text-sm text-navy">Estimado</span>
-        <span className="font-display text-2xl text-navy leading-none">
-          {formatCLP(estimado)}
-        </span>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleAdd}
-        disabled={!arido || qty <= 0}
-        className={`btn-brutal w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-whatsapp text-white border-navy' : ''}`}
-      >
-        {added ? (
-          <>
-            <Check className="w-4 h-4" /> Agregado: {formatQty(qty)} m³
-          </>
-        ) : (
-          <>
-            <ShoppingCart className="w-4 h-4" /> Agregar {formatQty(qty)} m³ al carrito
-          </>
-        )}
-      </button>
-
-      <p className="text-[11px] text-navy/60 mt-3 italic">
-        * Precio referencial IVA incluido. Despacho se cotiza según comuna y volumen.
-      </p>
     </div>
   );
 }

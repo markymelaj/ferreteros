@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
 import { CartCheckout } from '@/components/CartCheckout';
 import type { Settings } from '@/lib/types';
@@ -11,20 +13,23 @@ export default async function CarritoPage() {
   const settings = data as Settings;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <header className="mb-8">
-        <span className="font-display uppercase text-xs tracking-widest text-ember">
-          Tu pedido
-        </span>
-        <h1 className="font-display uppercase text-4xl md:text-5xl text-navy">
-          Carrito y cotización
-        </h1>
-        <p className="text-navy/70 mt-2 max-w-2xl">
-          Completa los datos de despacho y genera tu cotización. La enviarás
-          al WhatsApp de la ferretería y también podrás descargarla en PDF.
-        </p>
-      </header>
-      <CartCheckout settings={settings} />
+    <div className="bg-bg-page min-h-screen">
+      <div className="container-page py-4">
+        <nav className="flex items-center gap-1 text-xs text-text-secondary mb-3">
+          <Link href="/" className="hover:text-text-link">Inicio</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-text-primary">Carrito</span>
+        </nav>
+
+        <div className="bg-white rounded-card shadow-card px-4 py-3 mb-4">
+          <h1 className="text-xl font-bold text-text-primary">Tu carrito y cotización</h1>
+          <p className="text-xs text-text-secondary">
+            Completa los datos de despacho y enviaremos tu cotización directo a WhatsApp.
+          </p>
+        </div>
+
+        <CartCheckout settings={settings} />
+      </div>
     </div>
   );
 }

@@ -13,10 +13,10 @@ interface Props {
 }
 
 const TIPOS = [
-  { value: '',          label: 'Todos' },
-  { value: 'producto',  label: 'Productos' },
-  { value: 'arido',     label: 'Áridos' },
-  { value: 'maquinaria',label: 'Maquinaria' }
+  { value: '',           label: 'Todos' },
+  { value: 'producto',   label: 'Productos' },
+  { value: 'arido',      label: 'Áridos' },
+  { value: 'maquinaria', label: 'Arriendo' }
 ];
 
 export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
@@ -36,13 +36,13 @@ export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
   const hasFilters = q || tipoActivo || catActiva;
 
   return (
-    <div className="bg-white border-2 border-navy p-4 lg:sticky lg:top-24">
+    <div className="bg-white rounded-card shadow-card p-4 lg:sticky lg:top-32">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-display uppercase text-sm text-navy">Filtros</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Filtros</h3>
         {hasFilters && (
           <button
             onClick={() => router.push('/buscar')}
-            className="text-[10px] uppercase font-display text-ember hover:underline flex items-center gap-1"
+            className="text-2xs text-text-link hover:underline flex items-center gap-1"
           >
             <X className="w-3 h-3" /> Limpiar
           </button>
@@ -50,13 +50,13 @@ export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
       </div>
 
       {q && (
-        <div className="mb-4 p-2 bg-sand text-xs border border-navy/20">
-          Búsqueda: <strong>"{q}"</strong>
+        <div className="mb-3 p-2 bg-bg-sub rounded text-2xs">
+          <span className="text-text-secondary">Búsqueda:</span> <strong className="text-text-primary">"{q}"</strong>
         </div>
       )}
 
-      <div className="mb-4">
-        <p className="font-display uppercase text-[10px] tracking-wider text-navy/60 mb-2">
+      <div className="mb-4 pb-4 border-b border-gray-100">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
           Tipo
         </p>
         <div className="flex flex-col gap-1">
@@ -64,10 +64,10 @@ export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
             <button
               key={t.value}
               onClick={() => update('tipo', t.value)}
-              className={`text-left px-2 py-1.5 text-sm border-2 transition-colors ${
+              className={`text-left px-2 py-1.5 text-sm rounded transition-colors ${
                 tipoActivo === t.value
-                  ? 'bg-navy text-sand border-navy'
-                  : 'bg-transparent text-navy border-transparent hover:border-navy/30'
+                  ? 'bg-text-link text-white'
+                  : 'text-text-secondary hover:bg-bg-sub'
               }`}
             >
               {t.label}
@@ -78,16 +78,16 @@ export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
 
       {tipoActivo !== 'maquinaria' && (
         <div>
-          <p className="font-display uppercase text-[10px] tracking-wider text-navy/60 mb-2">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
             Categoría
           </p>
           <div className="flex flex-col gap-1">
             <button
               onClick={() => update('cat', '')}
-              className={`text-left px-2 py-1.5 text-sm border-2 transition-colors ${
+              className={`text-left px-2 py-1.5 text-sm rounded transition-colors ${
                 !catActiva
-                  ? 'bg-navy text-sand border-navy'
-                  : 'bg-transparent text-navy border-transparent hover:border-navy/30'
+                  ? 'bg-text-link text-white'
+                  : 'text-text-secondary hover:bg-bg-sub'
               }`}
             >
               Todas
@@ -96,10 +96,10 @@ export function SearchFilters({ categorias, q, tipoActivo, catActiva }: Props) {
               <button
                 key={c.id}
                 onClick={() => update('cat', c.slug)}
-                className={`text-left px-2 py-1.5 text-sm border-2 transition-colors ${
+                className={`text-left px-2 py-1.5 text-sm rounded transition-colors ${
                   catActiva === c.slug
-                    ? 'bg-navy text-sand border-navy'
-                    : 'bg-transparent text-navy border-transparent hover:border-navy/30'
+                    ? 'bg-text-link text-white'
+                    : 'text-text-secondary hover:bg-bg-sub'
                 }`}
               >
                 {c.nombre}
