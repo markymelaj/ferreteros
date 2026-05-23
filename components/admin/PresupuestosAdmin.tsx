@@ -3,7 +3,7 @@
 import { useState, Fragment } from 'react';
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
-import { formatCLP, whatsappLink } from '@/lib/format';
+import { formatCLP, whatsappLink, formatQty } from '@/lib/format';
 import type { Presupuesto } from '@/lib/types';
 
 const ESTADOS: Presupuesto['estado'][] = ['enviado', 'contactado', 'vendido', 'perdido'];
@@ -110,7 +110,7 @@ export function PresupuestosAdmin({ initial }: { initial: Presupuesto[] }) {
                           <ul className="text-xs space-y-1">
                             {(p.items as any[]).map((it, i) => (
                               <li key={i}>
-                                <span className="font-semibold">{it.cantidad} {it.unidad}</span> · {it.nombre} — {formatCLP(it.precio * it.cantidad)}
+                                <span className="font-semibold">{formatQty(it.cantidad)} {it.unidad}</span> · {it.nombre} — {formatCLP(it.precio * it.cantidad)}
                               </li>
                             ))}
                           </ul>

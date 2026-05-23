@@ -14,6 +14,17 @@ export function formatNumber(value: number | null | undefined): string {
   );
 }
 
+/**
+ * Formatea cantidades inteligentemente: muestra decimales solo si los tiene.
+ * Útil para áridos (1.5 m³) y productos enteros (3 unidades).
+ */
+export function formatQty(qty: number): string {
+  if (qty == null || isNaN(qty)) return '0';
+  return qty % 1 === 0
+    ? String(qty)
+    : new Intl.NumberFormat('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(qty);
+}
+
 export function effectivePrice(precio: number, oferta: number | null): number {
   return oferta && oferta > 0 && oferta < precio ? oferta : precio;
 }

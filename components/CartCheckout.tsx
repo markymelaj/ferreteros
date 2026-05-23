@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, Trash2, MessageCircle, FileDown, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/cart';
-import { formatCLP, whatsappLink } from '@/lib/format';
+import { formatCLP, whatsappLink, formatQty } from '@/lib/format';
 import { buildWhatsappMessage, generateQuotePDF } from '@/lib/quote';
 import type { Settings } from '@/lib/types';
 
@@ -151,7 +151,7 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                 <div className="mt-2 flex items-center gap-2">
                   <div className="inline-flex items-center border-2 border-navy">
                     <button
-                      onClick={() => setQty(it.id, it.cantidad - 1)}
+                      onClick={() => setQty(it.id, it.cantidad - (it.tipo === 'arido' ? 0.5 : 1))}
                       className="w-8 h-8 flex items-center justify-center hover:bg-navy hover:text-sand"
                       aria-label="Restar"
                     >
@@ -159,22 +159,26 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                     </button>
                     <input
                       type="number"
-                      min={1}
+                      min={it.tipo === 'arido' ? 0.5 : 1}
+                      step={it.tipo === 'arido' ? 0.5 : 1}
                       value={it.cantidad}
-                      onChange={(e) => setQty(it.id, parseInt(e.target.value) || 1)}
-                      className="w-12 h-8 text-center bg-transparent border-x-2 border-navy text-sm font-semibold focus:outline-none"
+                      onChange={(e) => setQty(it.id, parseFloat(e.target.value) || (it.tipo === 'arido' ? 0.5 : 1))}
+                      className="w-14 h-8 text-center bg-transparent border-x-2 border-navy text-sm font-semibold focus:outline-none"
                     />
                     <button
-                      onClick={() => setQty(it.id, it.cantidad + 1)}
+                      onClick={() => setQty(it.id, it.cantidad + (it.tipo === 'arido' ? 0.5 : 1))}
                       className="w-8 h-8 flex items-center justify-center hover:bg-navy hover:text-sand"
                       aria-label="Sumar"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
+                  <span className="text-xs text-navy/60">
+                    {it.tipo === 'arido' ? 'm³' : it.unidad}
+                  </span>
                   <button
                     onClick={() => remove(it.id)}
-                    className="text-xs text-red-600 hover:underline flex items-center gap-1"
+                    className="ml-auto text-xs text-red-600 hover:underline flex items-center gap-1"
                   >
                     <Trash2 className="w-3 h-3" /> Quitar
                   </button>

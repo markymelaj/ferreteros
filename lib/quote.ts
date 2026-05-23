@@ -1,5 +1,5 @@
 import type { CartItem, Settings } from './types';
-import { formatCLP } from './format';
+import { formatCLP, formatQty } from './format';
 
 export interface QuoteData {
   items: CartItem[];
@@ -31,7 +31,7 @@ export function buildWhatsappMessage(
   for (const it of q.items) {
     const totalItem = it.precio * it.cantidad;
     lines.push(
-      `• ${it.cantidad} ${it.unidad} — ${it.nombre} — ${formatCLP(it.precio)} c/u = ${formatCLP(totalItem)}`
+      `• ${formatQty(it.cantidad)} ${it.unidad} — ${it.nombre} — ${formatCLP(it.precio)} c/u = ${formatCLP(totalItem)}`
     );
   }
   lines.push('');
@@ -120,7 +120,7 @@ export async function generateQuotePDF(
       y = 20;
     }
     const totalItem = it.precio * it.cantidad;
-    doc.text(String(it.cantidad), 16, y + 5);
+    doc.text(formatQty(it.cantidad), 16, y + 5);
     doc.text(it.unidad, 30, y + 5);
     const nombre = it.nombre.length > 45 ? it.nombre.slice(0, 42) + '…' : it.nombre;
     doc.text(nombre, 50, y + 5);

@@ -54,7 +54,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const setQty = (id: string, cantidad: number) =>
     setItems((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, cantidad: Math.max(1, cantidad) } : p
+        p.id === id
+          ? { ...p, cantidad: Math.max(p.tipo === 'arido' ? 0.5 : 1, Number(cantidad) || 0) }
+          : p
       )
     );
 

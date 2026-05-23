@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { Menu, X, ShoppingCart, Phone } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { formatPhoneDisplay } from '@/lib/format';
+import { SearchBar } from './SearchBar';
 import type { Settings } from '@/lib/types';
 
 const NAV = [
   { href: '/materiales', label: 'Materiales' },
-  { href: '/aridos', label: 'Áridos' },
-  { href: '/arriendo', label: 'Arriendo' },
-  { href: '/contacto', label: 'Contacto' }
+  { href: '/aridos',     label: 'Áridos' },
+  { href: '/arriendo',   label: 'Arriendo' },
+  { href: '/contacto',   label: 'Contacto' }
 ];
 
 export function Header({ settings }: { settings: Settings | null }) {
@@ -34,8 +35,9 @@ export function Header({ settings }: { settings: Settings | null }) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
+      {/* Línea principal */}
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <div className="w-9 h-9 bg-ember border-2 border-sand flex items-center justify-center font-display text-navy text-lg transition-transform group-hover:rotate-[-6deg]">
             N
           </div>
@@ -44,7 +46,12 @@ export function Header({ settings }: { settings: Settings | null }) {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6">
+        {/* SearchBar desktop */}
+        <div className="hidden md:block flex-1 max-w-md">
+          <SearchBar />
+        </div>
+
+        <nav className="hidden lg:flex items-center gap-5">
           {NAV.map((n) => (
             <Link
               key={n.href}
@@ -56,10 +63,10 @@ export function Header({ settings }: { settings: Settings | null }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <a
             href={`tel:${phone}`}
-            className="hidden md:flex items-center gap-1.5 text-sm font-semibold hover:text-ember transition-colors"
+            className="hidden xl:flex items-center gap-1.5 text-sm font-semibold hover:text-ember transition-colors"
           >
             <Phone className="w-4 h-4" />
             {formatPhoneDisplay(phone)}
@@ -84,6 +91,11 @@ export function Header({ settings }: { settings: Settings | null }) {
             {open ? <X /> : <Menu />}
           </button>
         </div>
+      </div>
+
+      {/* SearchBar mobile (segunda línea) */}
+      <div className="md:hidden px-4 pb-3">
+        <SearchBar />
       </div>
 
       {open && (
