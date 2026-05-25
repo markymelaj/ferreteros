@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash2, Star, X, Loader2, FileSpreadsheet, Package, Mountain } from 'lucide-react';
+import Image from 'next/image';
+import {
+  Plus, Pencil, Trash2, Star, X, Loader2, FileSpreadsheet,
+  Package, Mountain, Search
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import { formatCLP } from '@/lib/format';
 import { BulkImport } from './BulkImport';
@@ -107,105 +111,136 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
 
   return (
     <div>
-      <header className="flex items-center justify-between mb-6 flex-wrap gap-2">
-        <div>
-          <h1 className="font-display uppercase text-3xl text-navy">Productos y Áridos</h1>
-          <p className="text-navy/70 text-sm">
-            <span className="inline-flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {totalProductos} productos</span>
-            {' · '}
-            <span className="inline-flex items-center gap-1"><Mountain className="w-3.5 h-3.5" /> {totalAridos} áridos</span>
-          </p>
+      {/* Header */}
+      <header className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">
+              Productos y Áridos
+            </h1>
+            <p className="text-text-secondary text-sm mt-0.5">
+              <span className="inline-flex items-center gap-1">
+                <Package className="w-3.5 h-3.5" /> {totalProductos} productos
+              </span>
+              {' · '}
+              <span className="inline-flex items-center gap-1">
+                <Mountain className="w-3.5 h-3.5" /> {totalAridos} áridos
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setBulkOpen(true)}
+              className="btn-outline text-sm"
+              title="Carga masiva desde CSV"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Importar</span> CSV
+            </button>
+            <button
+              onClick={() => setEditing({ ...EMPTY, tipo: 'arido', unidad: 'm³' })}
+              className="btn-outline text-sm"
+              title="Crear árido"
+            >
+              <Mountain className="w-4 h-4" /> Árido
+            </button>
+            <button
+              onClick={() => setEditing({ ...EMPTY })}
+              className="btn-primary text-sm"
+            >
+              <Plus className="w-4 h-4" /> Nuevo
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setBulkOpen(true)}
-            className="btn-outline"
-            title="Carga masiva desde CSV"
-          >
-            <FileSpreadsheet className="w-4 h-4" /> Importar CSV
-          </button>
-          <button
-            onClick={() => setEditing({ ...EMPTY, tipo: 'arido', unidad: 'm³' })}
-            className="btn-outline"
-            title="Crear árido"
-          >
-            <Mountain className="w-4 h-4" /> Nuevo árido
-          </button>
-          <button onClick={() => setEditing({ ...EMPTY })} className="btn-brutal">
-            <Plus className="w-4 h-4" /> Nuevo producto
-          </button>
+
+        {/* Filtros */}
+        <div className="space-y-2">
+          <div className="flex bg-bg-sub rounded p-1 text-sm">
+            <button
+              onClick={() => setFilterTipo('')}
+              className={`flex-1 px-3 py-2 font-semibold rounded transition-colors ${
+                filterTipo === '' ? 'bg-white text-text-primary shadow-card' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              Todos <span className="text-text-tertiary">({items.length})</span>
+            </button>
+            <button
+              onClick={() => setFilterTipo('producto')}
+              className={`flex-1 px-3 py-2 font-semibold rounded transition-colors inline-flex items-center justify-center gap-1.5 ${
+                filterTipo === 'producto' ? 'bg-white text-text-primary shadow-card' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5" />
+              Productos <span className="text-text-tertiary">({totalProductos})</span>
+            </button>
+            <button
+              onClick={() => setFilterTipo('arido')}
+              className={`flex-1 px-3 py-2 font-semibold rounded transition-colors inline-flex items-center justify-center gap-1.5 ${
+                filterTipo === 'arido' ? 'bg-white text-text-primary shadow-card' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <Mountain className="w-3.5 h-3.5" />
+              Áridos <span className="text-text-tertiary">({totalAridos})</span>
+            </button>
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+              <input
+                placeholder="Buscar por nombre…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 pl-9 text-sm placeholder:text-text-tertiary focus:outline-none focus:border-text-link focus:ring-1 focus:ring-text-link/30"
+              />
+            </div>
+            <select
+              className="bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-text-link min-w-[150px]"
+              value={filterCat}
+              onChange={(e) => setFilterCat(e.target.value)}
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </select>
+          </div>
         </div>
       </header>
 
-      {/* Filtros con segmento Todos/Productos/Áridos */}
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
-        <div className="inline-flex border border-navy/30 rounded overflow-hidden text-xs">
-          <button
-            onClick={() => setFilterTipo('')}
-            className={`px-3 py-2 font-semibold ${filterTipo === '' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-sand'}`}
-          >
-            Todos ({items.length})
-          </button>
-          <button
-            onClick={() => setFilterTipo('producto')}
-            className={`px-3 py-2 font-semibold border-l border-navy/30 ${filterTipo === 'producto' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-sand'}`}
-          >
-            <Package className="w-3 h-3 inline mr-1" /> Productos ({totalProductos})
-          </button>
-          <button
-            onClick={() => setFilterTipo('arido')}
-            className={`px-3 py-2 font-semibold border-l border-navy/30 ${filterTipo === 'arido' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-sand'}`}
-          >
-            <Mountain className="w-3 h-3 inline mr-1" /> Áridos ({totalAridos})
-          </button>
-        </div>
-        <input
-          placeholder="Buscar por nombre…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input max-w-xs"
-        />
-        <select className="input max-w-xs" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
-          <option value="">Todas las categorías</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-        </select>
-      </div>
-
-      <div className="bg-white border-2 border-navy overflow-x-auto">
-        <table className="w-full text-sm min-w-[800px]">
-          <thead className="bg-sand text-navy">
+      {/* Tabla desktop */}
+      <div className="hidden md:block bg-white rounded-card shadow-card overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-bg-sub text-text-secondary text-xs uppercase">
             <tr>
-              <th className="text-left p-3 font-display uppercase text-xs">SKU</th>
-              <th className="text-left p-3 font-display uppercase text-xs">Nombre</th>
-              <th className="text-left p-3 font-display uppercase text-xs">Tipo</th>
-              <th className="text-right p-3 font-display uppercase text-xs">Precio</th>
-              <th className="text-right p-3 font-display uppercase text-xs">Oferta</th>
-              <th className="text-center p-3 font-display uppercase text-xs">Destacado</th>
-              <th className="text-center p-3 font-display uppercase text-xs">Activo</th>
-              <th className="text-right p-3 font-display uppercase text-xs">Acciones</th>
+              <th className="text-left p-3 font-semibold">SKU</th>
+              <th className="text-left p-3 font-semibold">Nombre</th>
+              <th className="text-left p-3 font-semibold">Tipo</th>
+              <th className="text-right p-3 font-semibold">Precio</th>
+              <th className="text-right p-3 font-semibold">Oferta</th>
+              <th className="text-center p-3 font-semibold">Destacado</th>
+              <th className="text-center p-3 font-semibold">Activo</th>
+              <th className="text-right p-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p) => (
-              <tr key={p.id} className="border-t border-navy/10 hover:bg-sand/40">
-                <td className="p-3 font-mono text-xs">{p.sku ?? '—'}</td>
+              <tr key={p.id} className="border-t border-gray-100 hover:bg-bg-hover">
+                <td className="p-3 font-mono text-xs text-text-secondary">{p.sku ?? '—'}</td>
+                <td className="p-3 font-semibold text-text-primary">{p.nombre}</td>
                 <td className="p-3">
-                  <span className="font-semibold text-navy">{p.nombre}</span>
-                </td>
-                <td className="p-3">
-                  <span className={`text-[10px] uppercase font-display px-1.5 py-0.5 border ${
+                  <span className={`text-2xs uppercase font-semibold px-1.5 py-0.5 rounded ${
                     p.tipo === 'arido'
-                      ? 'border-ember/40 bg-ember/10 text-navy'
-                      : 'border-navy/30 text-navy'
+                      ? 'bg-brand-100 text-brand-800'
+                      : 'bg-ink-50 text-ink-800'
                   }`}>
                     {p.tipo}
                   </span>
                 </td>
-                <td className="p-3 text-right">{formatCLP(p.precio)}</td>
-                <td className="p-3 text-right text-ember">{p.precio_oferta ? formatCLP(p.precio_oferta) : '—'}</td>
+                <td className="p-3 text-right text-text-primary">{formatCLP(p.precio)}</td>
+                <td className="p-3 text-right text-success font-semibold">
+                  {p.precio_oferta ? formatCLP(p.precio_oferta) : '—'}
+                </td>
                 <td className="p-3 text-center">
                   <button onClick={() => toggleField(p.id, 'destacado', !p.destacado)} aria-label="Toggle destacado">
-                    <Star className={`w-5 h-5 ${p.destacado ? 'fill-ember text-ember' : 'text-navy/30'}`} />
+                    <Star className={`w-5 h-5 ${p.destacado ? 'fill-brand-500 text-brand-500' : 'text-gray-300'}`} />
                   </button>
                 </td>
                 <td className="p-3 text-center">
@@ -213,86 +248,168 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
                     type="checkbox"
                     checked={p.activo}
                     onChange={(e) => toggleField(p.id, 'activo', e.target.checked)}
-                    className="w-4 h-4 accent-ember"
+                    className="w-4 h-4 accent-text-link"
                   />
                 </td>
                 <td className="p-3 text-right whitespace-nowrap">
-                  <button onClick={() => setEditing(p)} className="text-navy hover:text-ember mr-2" aria-label="Editar">
-                    <Pencil className="w-4 h-4 inline" />
+                  <button
+                    onClick={() => setEditing(p)}
+                    className="text-text-link hover:text-blue-700 mr-2 p-1.5 hover:bg-blue-50 rounded transition-colors"
+                    aria-label="Editar"
+                  >
+                    <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(p)} className="text-red-600 hover:text-red-800" aria-label="Eliminar">
-                    <Trash2 className="w-4 h-4 inline" />
+                  <button
+                    onClick={() => handleDelete(p)}
+                    className="text-danger hover:text-red-700 p-1.5 hover:bg-red-50 rounded transition-colors"
+                    aria-label="Eliminar"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="p-6 text-center text-navy/50">Sin resultados</td></tr>
+              <tr><td colSpan={8} className="p-8 text-center text-text-tertiary">Sin resultados</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Modal con backdrop opaco y scroll interno */}
-      {editing && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          aria-modal="true"
-          role="dialog"
-          onClick={(e) => {
-            // Cierra solo si se hace click en el backdrop, no en el form
-            if (e.target === e.currentTarget) setEditing(null);
-          }}
-        >
-          {/* Backdrop SÓLIDO (no transparente) */}
-          <div className="fixed inset-0 bg-navy/95 backdrop-blur-sm" aria-hidden="true" />
+      {/* Cards mobile */}
+      <div className="md:hidden space-y-2">
+        {filtered.map((p) => (
+          <div key={p.id} className="bg-white rounded-card shadow-card p-3 flex gap-3">
+            <div className="w-16 h-16 bg-bg-sub rounded shrink-0 overflow-hidden relative">
+              {p.imagen_url ? (
+                <Image src={p.imagen_url} alt={p.nombre} fill sizes="64px" className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-text-tertiary text-2xl">
+                  {p.nombre.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="text-xs font-mono text-text-tertiary">{p.sku ?? '—'}</p>
+                <span className={`text-2xs uppercase font-semibold px-1.5 py-0.5 rounded shrink-0 ${
+                  p.tipo === 'arido' ? 'bg-brand-100 text-brand-800' : 'bg-ink-50 text-ink-800'
+                }`}>
+                  {p.tipo}
+                </span>
+              </div>
+              <p className="font-semibold text-sm text-text-primary line-clamp-2 mb-1">
+                {p.nombre}
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-bold text-text-primary">
+                  {formatCLP(p.precio_oferta ?? p.precio)}
+                </span>
+                {p.precio_oferta && (
+                  <span className="text-2xs text-text-tertiary line-through">
+                    {formatCLP(p.precio)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 mt-2 text-xs">
+                <button
+                  onClick={() => toggleField(p.id, 'destacado', !p.destacado)}
+                  className="inline-flex items-center gap-1"
+                >
+                  <Star className={`w-4 h-4 ${p.destacado ? 'fill-brand-500 text-brand-500' : 'text-gray-300'}`} />
+                  <span className="text-text-secondary">Destacado</span>
+                </button>
+                <label className="inline-flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={p.activo}
+                    onChange={(e) => toggleField(p.id, 'activo', e.target.checked)}
+                    className="w-4 h-4 accent-text-link"
+                  />
+                  <span className="text-text-secondary">Activo</span>
+                </label>
+                <button
+                  onClick={() => setEditing(p)}
+                  className="ml-auto text-text-link font-semibold"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(p)}
+                  className="text-danger"
+                  aria-label="Eliminar"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-card shadow-card p-8 text-center text-text-tertiary">
+            Sin resultados
+          </div>
+        )}
+      </div>
 
-          <div className="relative min-h-full flex items-start justify-center p-4 py-8">
+      {/* Modal de edición — opaco real, fullscreen en mobile */}
+      {editing && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-modal="true" role="dialog">
+          {/* Backdrop SÓLIDO */}
+          <div
+            className="fixed inset-0 bg-ink-900/90 backdrop-blur-sm"
+            onClick={() => setEditing(null)}
+            aria-hidden="true"
+          />
+
+          <div className="relative min-h-full flex items-start sm:items-center justify-center p-0 sm:p-4">
             <form
               onSubmit={handleSave}
-              className="relative bg-sand border-2 border-navy max-w-2xl w-full p-6 shadow-brutal"
+              className="relative bg-white w-full sm:max-w-2xl shadow-card-hover min-h-screen sm:min-h-0 sm:rounded-card flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-display uppercase text-2xl text-navy">
+              {/* Header sticky */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between z-10">
+                <h2 className="text-lg sm:text-xl font-bold text-text-primary">
                   {editing.id ? 'Editar' : 'Nuevo'} {editing.tipo === 'arido' ? 'árido' : 'producto'}
                 </h2>
                 <button
                   type="button"
                   onClick={() => setEditing(null)}
                   aria-label="Cerrar"
-                  className="text-navy hover:text-ember"
+                  className="p-2 -mr-2 text-text-secondary hover:text-text-primary hover:bg-bg-sub rounded transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Body */}
+              <div className="flex-1 px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="label">SKU</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">SKU</label>
                   <input className="input" value={editing.sku ?? ''} onChange={(e) => setEditing({ ...editing, sku: e.target.value })} />
                 </div>
                 <div>
-                  <label className="label">Slug (URL)</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Slug (URL)</label>
                   <input className="input" value={editing.slug ?? ''} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} placeholder="Auto desde nombre si vacío" />
                 </div>
-                <div className="col-span-2">
-                  <label className="label">Nombre *</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Nombre *</label>
                   <input className="input" required value={editing.nombre ?? ''} onChange={(e) => setEditing({ ...editing, nombre: e.target.value })} />
                 </div>
-                <div className="col-span-2">
-                  <label className="label">Descripción</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Descripción</label>
                   <textarea className="input min-h-[80px]" value={editing.descripcion ?? ''} onChange={(e) => setEditing({ ...editing, descripcion: e.target.value })} />
                 </div>
                 <div>
-                  <label className="label">Categoría</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Categoría</label>
                   <select className="input" value={editing.categoria_id ?? ''} onChange={(e) => setEditing({ ...editing, categoria_id: e.target.value || null })}>
                     <option value="">— Sin categoría —</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Tipo</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Tipo</label>
                   <select
                     className="input"
                     value={editing.tipo ?? 'producto'}
@@ -301,31 +418,30 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
                       setEditing({
                         ...editing,
                         tipo: newTipo,
-                        // Si pasa a árido, sugerir m³ como unidad si no se cambió
                         unidad: newTipo === 'arido' && (editing.unidad === 'unidad' || !editing.unidad)
                           ? 'm³'
                           : editing.unidad
                       });
                     }}
                   >
-                    <option value="producto">Producto (unidades, sacos, rollos…)</option>
+                    <option value="producto">Producto</option>
                     <option value="arido">Árido (vendido por m³)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">Precio (CLP) *</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Precio (CLP) *</label>
                   <input type="number" className="input" required value={editing.precio ?? 0} onChange={(e) => setEditing({ ...editing, precio: Number(e.target.value) })} />
                 </div>
                 <div>
-                  <label className="label">Precio oferta</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Precio oferta</label>
                   <input type="number" className="input" value={editing.precio_oferta ?? ''} onChange={(e) => setEditing({ ...editing, precio_oferta: e.target.value ? Number(e.target.value) : null })} />
                 </div>
                 <div>
-                  <label className="label">Unidad</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Unidad</label>
                   <input className="input" value={editing.unidad ?? 'unidad'} onChange={(e) => setEditing({ ...editing, unidad: e.target.value })} placeholder="unidad, saco, m³…" />
                 </div>
                 <div>
-                  <label className="label">Estado de stock</label>
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Estado de stock</label>
                   <select className="input" value={editing.stock_estado ?? 'disponible'} onChange={(e) => setEditing({ ...editing, stock_estado: e.target.value as StockEstado })}>
                     <option value="disponible">Disponible</option>
                     <option value="bajo_stock">Bajo stock</option>
@@ -333,8 +449,8 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
                     <option value="consultar">Consultar</option>
                   </select>
                 </div>
-                <div className="col-span-2">
-                  <label className="label">Imágenes del producto</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-text-primary mb-1">Imágenes del producto</label>
                   <ImageUploader
                     value={editing.imagen_url ?? null}
                     onChange={(url) => setEditing({ ...editing, imagen_url: url })}
@@ -342,19 +458,22 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
                     onGalleryChange={(urls) => setEditing({ ...editing, imagenes_galeria: urls })}
                   />
                 </div>
-                <label className="col-span-1 flex items-center gap-2 font-semibold text-navy">
-                  <input type="checkbox" checked={!!editing.destacado} onChange={(e) => setEditing({ ...editing, destacado: e.target.checked })} className="w-4 h-4 accent-ember" />
+                <label className="flex items-center gap-2 font-medium text-text-primary text-sm">
+                  <input type="checkbox" checked={!!editing.destacado} onChange={(e) => setEditing({ ...editing, destacado: e.target.checked })} className="w-4 h-4 accent-text-link" />
                   Destacado en home
                 </label>
-                <label className="col-span-1 flex items-center gap-2 font-semibold text-navy">
-                  <input type="checkbox" checked={editing.activo !== false} onChange={(e) => setEditing({ ...editing, activo: e.target.checked })} className="w-4 h-4 accent-ember" />
+                <label className="flex items-center gap-2 font-medium text-text-primary text-sm">
+                  <input type="checkbox" checked={editing.activo !== false} onChange={(e) => setEditing({ ...editing, activo: e.target.checked })} className="w-4 h-4 accent-text-link" />
                   Activo (visible)
                 </label>
               </div>
 
-              <div className="mt-6 flex gap-2 justify-end sticky bottom-0 bg-sand pt-4 border-t border-navy/20">
-                <button type="button" onClick={() => setEditing(null)} className="btn-ghost">Cancelar</button>
-                <button type="submit" disabled={saving} className="btn-brutal">
+              {/* Footer sticky */}
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 sm:px-6 py-3 flex gap-2 justify-end">
+                <button type="button" onClick={() => setEditing(null)} className="btn-ghost">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={saving} className="btn-primary">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   {saving ? 'Guardando…' : 'Guardar'}
                 </button>
