@@ -1,5 +1,6 @@
 export type StockEstado = 'disponible' | 'bajo_stock' | 'sin_stock' | 'consultar';
 export type ProductTipo = 'producto' | 'arido';
+export type UbicacionTipo = 'direccion' | 'gps' | 'referencia';
 
 export interface Category {
   id: string;
@@ -80,4 +81,7 @@ export interface Presupuesto {
   direccion_despacho: string | null;
   observaciones: string | null;
   estado: 'enviado' | 'contactado' | 'vendido' | 'perdido';
+  lat: number | null;
+  lng: number | null;
+  ubicacion_tipo: UbicacionTipo;
 }

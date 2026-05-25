@@ -89,7 +89,14 @@ create table if not exists presupuestos (
   comuna text,
   direccion_despacho text,
   observaciones text,
-  estado text default 'enviado' check (estado in ('enviado','contactado','vendido','perdido'))
+  estado text default 'enviado' check (estado in ('enviado','contactado','vendido','perdido')),
+  -- Geolocalización (opcional). Cubre rural/sin nombre de calle:
+  --   'direccion'   → solo dirección (default)
+  --   'gps'         → coordenadas GPS (ej: campo, parcela)
+  --   'referencia'  → texto libre + opcional GPS (ej: "Camino Paraguay km 3")
+  lat numeric,
+  lng numeric,
+  ubicacion_tipo text default 'direccion' check (ubicacion_tipo in ('direccion','gps','referencia'))
 );
 
 -- Admins (lista blanca de emails con acceso)
@@ -106,6 +113,7 @@ create index if not exists products_destacado_idx on products(destacado) where d
 create index if not exists products_tipo_idx on products(tipo);
 create index if not exists products_activo_idx on products(activo) where activo = true;
 create index if not exists presupuestos_fecha_idx on presupuestos(fecha desc);
+create index if not exists presupuestos_ubicacion_tipo_idx on presupuestos(ubicacion_tipo);
 
 -- =====================================================
 -- TRIGGER updated_at

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Star, X, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Pencil, Trash2, Star, X, Loader2, FileSpreadsheet } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import { formatCLP } from '@/lib/format';
+import { BulkImport } from './BulkImport';
 import type { Product, Category, StockEstado, ProductTipo } from '@/lib/types';
 
 interface Props {
@@ -33,6 +35,8 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const router = useRouter();
   const supabase = createClient();
 
   const filtered = items.filter((p) => {
@@ -100,9 +104,18 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
           <h1 className="font-display uppercase text-3xl text-navy">Productos</h1>
           <p className="text-navy/70 text-sm">{items.length} en total</p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY })} className="btn-brutal">
-          <Plus className="w-4 h-4" /> Nuevo producto
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setBulkOpen(true)}
+            className="btn-outline"
+            title="Carga masiva desde CSV"
+          >
+            <FileSpreadsheet className="w-4 h-4" /> Importar CSV
+          </button>
+          <button onClick={() => setEditing({ ...EMPTY })} className="btn-brutal">
+            <Plus className="w-4 h-4" /> Nuevo producto
+          </button>
+        </div>
       </header>
 
       <div className="flex gap-2 mb-4 flex-wrap">
@@ -263,6 +276,14 @@ export function ProductsAdmin({ initialProducts, categories }: Props) {
             </div>
           </form>
         </div>
+      )}
+
+      {bulkOpen && (
+        <BulkImport
+          categories={categories}
+          onClose={() => setBulkOpen(false)}
+          onDone={() => router.refresh()}
+        />
       )}
     </div>
   );

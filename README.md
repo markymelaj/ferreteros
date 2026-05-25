@@ -13,12 +13,17 @@ Plataforma piloto de ferretería para Chile: catálogo, áridos, arriendo de maq
 - 🪨 **Áridos por m³** con calculadora de volumen integrada
 - ⛏️ **Arriendo de maquinaria** con tarifas día/semana/mes
 - 🛒 **Carrito** persistente en localStorage (sin login para clientes)
-- 📲 **Cotización WhatsApp**: el botón "Enviar cotización" registra el presupuesto, descarga el PDF y abre WhatsApp con el mensaje pre-armado
+- 📍 **Ubicación flexible** en el checkout (clave en Chile rural):
+  - **Dirección**: calle + número (formato tradicional)
+  - **GPS**: botón "Usar mi ubicación actual" → coordenadas + link a Google Maps
+  - **Rural**: texto libre + GPS opcional para caminos sin nombre, parcelas, fundos
+- 📲 **Cotización WhatsApp**: el botón "Enviar cotización" registra el presupuesto, descarga el PDF (con link al mapa si hay GPS) y abre WhatsApp con el mensaje pre-armado
 - 🔐 **Panel admin** con magic link (Supabase Auth) y whitelist de emails:
   - Dashboard con métricas mensuales
   - CRUD productos (precio, oferta, destacado, stock, foto)
+  - **Carga masiva** de productos desde CSV con preview y validación por fila
   - CRUD categorías y maquinaria
-  - Listado de presupuestos con cambio de estado y contacto directo
+  - Listado de presupuestos con visualización GPS, link al mapa y **exportación a CSV**
   - Settings configurables (nombre, teléfono, comunas, IVA, etc.)
 - 🎨 **Identidad propia**: navy + naranja, tipografía industrial (Archivo Black + Manrope)
 - 🌐 SEO básico, OpenGraph y revalidación ISR cada 60s
@@ -37,7 +42,9 @@ Plataforma piloto de ferretería para Chile: catálogo, áridos, arriendo de maq
 En el **SQL Editor** de Supabase, ejecuta en orden:
 
 1. `supabase/schema.sql` — crea tablas, índices, RLS y el helper `is_admin()`.
-2. `supabase/seed.sql` — inserta 6 categorías, 30 productos, 7 áridos y 3 máquinas.
+2. `supabase/seed.sql` — inserta 6 categorías, 30 productos, 7 áridos y 3 máquinas (con imágenes Unsplash reales).
+
+> **¿Ya tenías la versión anterior corriendo?** Aplica `supabase/migration_v2.sql` en vez del seed: agrega columnas de geolocalización a `presupuestos` y actualiza las URLs de imágenes a Unsplash.
 
 ### 3. Autorizar al admin
 
@@ -130,7 +137,10 @@ nexo-sur/
 
 ## Notas y siguientes pasos
 
-- **Imágenes**: por defecto cada producto muestra una letra grande estilizada como placeholder. Para usar imágenes reales, sube las fotos a **Supabase Storage** y pega la URL pública en cada producto desde el admin.
+- **Imágenes**: los datos seed usan fotos de Unsplash (CDN público, libre, sin atribución requerida). Para un cliente real, sube las fotos a **Supabase Storage** y pega la URL pública en cada producto desde el admin, o úsalas en el CSV de carga masiva.
+- **Carga masiva CSV**: desde `/admin/productos` → botón "Importar CSV". El sistema valida fila por fila antes de importar y hace `upsert` por slug (re-importar el mismo CSV actualiza los productos existentes en vez de duplicarlos). Soporta hasta 500 filas por importación. Hay una plantilla descargable con ejemplos.
+- **Geolocalización en checkout**: el cliente puede elegir entre tres modos de ubicación. Las coordenadas se guardan junto al presupuesto y aparecen en el panel admin como un link directo a Google Maps. Útil especialmente para despachos en zonas rurales (Saltos del Laja, Antuco, Mulchén) donde la dirección formal no existe.
+- **Exportar presupuestos**: desde `/admin/presupuestos` → "Exportar CSV". Incluye coordenadas GPS y respeta el filtro de estado activo. Útil para pasarle el reporte al contador o seguimiento offline.
 - **Pasarela de pago**: no incluida por diseño — el flujo es cotización + WhatsApp. Si en el futuro se quiere agregar Flow / Khipu / Mercado Pago, se inserta entre `CartCheckout` y la API `/api/presupuestos`.
 - **Stock real**: el campo `stock_estado` es solo cualitativo (`disponible / bajo_stock / sin_stock / consultar`). Para inventario numérico se puede agregar una columna `stock_qty integer` y restarla en el endpoint del presupuesto.
 

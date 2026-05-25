@@ -1,4 +1,4 @@
-import type { CartItem, Settings } from './types';
+import type { CartItem, Settings, UbicacionTipo } from './types';
 import { formatCLP, formatQty } from './format';
 
 export interface QuoteData {
@@ -12,6 +12,20 @@ export interface QuoteData {
   comuna: string;
   direccion_despacho: string;
   observaciones?: string;
+  // Geolocalización opcional
+  lat?: number | null;
+  lng?: number | null;
+  ubicacion_tipo?: UbicacionTipo;
+}
+
+/** Link a Google Maps a partir de coordenadas (formato corto, abre con un toque). */
+export function mapsLink(lat: number, lng: number): string {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
+/** Formatea coordenadas con 5 decimales (~1m de precisión). */
+export function formatCoords(lat: number, lng: number): string {
+  return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 
 export function buildWhatsappMessage(
@@ -25,7 +39,26 @@ export function buildWhatsappMessage(
   lines.push(`*Teléfono:* ${q.cliente_telefono}`);
   if (q.cliente_email) lines.push(`*Email:* ${q.cliente_email}`);
   lines.push(`*Comuna:* ${q.comuna}`);
-  lines.push(`*Dirección de despacho:* ${q.direccion_despacho}`);
+
+  // Sección de ubicación adaptativa según tipo
+  const tipo = q.ubicacion_tipo ?? 'direccion';
+  if (tipo === 'gps' && q.lat != null && q.lng != null) {
+    lines.push(`*Ubicación GPS:* ${formatCoords(q.lat, q.lng)}`);
+    lines.push(`*Mapa:* ${mapsLink(q.lat, q.lng)}`);
+    if (q.direccion_despacho) lines.push(`*Referencia:* ${q.direccion_despacho}`);
+  } else if (tipo === 'referencia') {
+    lines.push(`*Referencia rural:* ${q.direccion_despacho}`);
+    if (q.lat != null && q.lng != null) {
+      lines.push(`*GPS:* ${formatCoords(q.lat, q.lng)}`);
+      lines.push(`*Mapa:* ${mapsLink(q.lat, q.lng)}`);
+    }
+  } else {
+    lines.push(`*Dirección de despacho:* ${q.direccion_despacho}`);
+    if (q.lat != null && q.lng != null) {
+      lines.push(`*GPS aux:* ${mapsLink(q.lat, q.lng)}`);
+    }
+  }
+
   lines.push('');
   lines.push('*PRODUCTOS COTIZADOS:*');
   for (const it of q.items) {
@@ -97,7 +130,43 @@ export async function generateQuotePDF(
   doc.text(`Nombre: ${q.cliente_nombre}`, 14, y); y += 5;
   doc.text(`Teléfono: ${q.cliente_telefono}`, 14, y); y += 5;
   if (q.cliente_email) { doc.text(`Email: ${q.cliente_email}`, 14, y); y += 5; }
-  doc.text(`Despacho: ${q.direccion_despacho}, ${q.comuna}`, 14, y); y += 8;
+
+  // Sección de ubicación adaptativa
+  const tipo = q.ubicacion_tipo ?? 'direccion';
+  const tieneGPS = q.lat != null && q.lng != null;
+
+  if (tipo === 'gps' && tieneGPS) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Ubicación GPS:', 14, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatCoords(q.lat!, q.lng!), 50, y);
+    y += 5;
+    if (q.direccion_despacho) { doc.text(`Referencia: ${q.direccion_despacho}`, 14, y); y += 5; }
+    doc.setTextColor(52, 131, 250);
+    doc.textWithLink('Ver en Google Maps →', 14, y, { url: mapsLink(q.lat!, q.lng!) });
+    doc.setTextColor(10, 10, 10);
+    y += 5;
+    doc.text(`Comuna: ${q.comuna}`, 14, y); y += 8;
+  } else if (tipo === 'referencia') {
+    doc.text(`Referencia rural: ${q.direccion_despacho}`, 14, y); y += 5;
+    doc.text(`Comuna: ${q.comuna}`, 14, y); y += 5;
+    if (tieneGPS) {
+      doc.text(`GPS: ${formatCoords(q.lat!, q.lng!)}`, 14, y); y += 5;
+      doc.setTextColor(52, 131, 250);
+      doc.textWithLink('Ver en Google Maps →', 14, y, { url: mapsLink(q.lat!, q.lng!) });
+      doc.setTextColor(10, 10, 10);
+      y += 8;
+    } else { y += 3; }
+  } else {
+    doc.text(`Despacho: ${q.direccion_despacho}, ${q.comuna}`, 14, y); y += 5;
+    if (tieneGPS) {
+      doc.setTextColor(52, 131, 250);
+      doc.textWithLink('GPS auxiliar →', 14, y, { url: mapsLink(q.lat!, q.lng!) });
+      doc.setTextColor(10, 10, 10);
+      y += 5;
+    }
+    y += 3;
+  }
 
   // Tabla productos
   doc.setFillColor(11, 37, 69);

@@ -3,11 +3,26 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, Trash2, MessageCircle, FileDown, ShoppingBag } from 'lucide-react';
+import {
+  Minus, Plus, Trash2, MessageCircle, FileDown, ShoppingBag,
+  MapPin, Locate, Loader2, Check, Navigation, Home, Map
+} from 'lucide-react';
 import { useCart } from '@/lib/cart';
-import { formatCLP, whatsappLink, formatQty } from '@/lib/format';
-import { buildWhatsappMessage, generateQuotePDF } from '@/lib/quote';
-import type { Settings } from '@/lib/types';
+import { formatCLP, whatsappLink } from '@/lib/format';
+import { buildWhatsappMessage, generateQuotePDF, mapsLink, formatCoords } from '@/lib/quote';
+import type { Settings, UbicacionTipo } from '@/lib/types';
+
+type GeoState = {
+  status: 'idle' | 'locating' | 'ok' | 'denied' | 'error' | 'unsupported';
+  lat: number | null;
+  lng: number | null;
+  accuracy: number | null;
+  message: string | null;
+};
+
+const INITIAL_GEO: GeoState = {
+  status: 'idle', lat: null, lng: null, accuracy: null, message: null
+};
 
 export function CartCheckout({ settings }: { settings: Settings }) {
   const { items, remove, setQty, clear, subtotal, count } = useCart();
@@ -19,16 +34,70 @@ export function CartCheckout({ settings }: { settings: Settings }) {
     direccion_despacho: '',
     observaciones: ''
   });
+  const [ubicacionTipo, setUbicacionTipo] = useState<UbicacionTipo>('direccion');
+  const [geo, setGeo] = useState<GeoState>(INITIAL_GEO);
   const [sending, setSending] = useState(false);
 
   const iva = Math.round(subtotal * (settings.iva_pct / 100));
   const total = subtotal + iva;
 
+  // Validación dinámica según el tipo de ubicación seleccionado
+  const direccionValid = (() => {
+    if (ubicacionTipo === 'gps') {
+      return geo.lat != null && geo.lng != null;
+    }
+    if (ubicacionTipo === 'referencia') {
+      // Referencia rural: pide texto descriptivo (puede incluir GPS opcional)
+      return form.direccion_despacho.trim().length > 5;
+    }
+    // direccion: pide texto de calle/número
+    return form.direccion_despacho.trim().length > 2;
+  })();
+
   const formValid =
     form.cliente_nombre.trim().length > 1 &&
     form.cliente_telefono.trim().length >= 8 &&
     form.comuna &&
-    form.direccion_despacho.trim().length > 2;
+    direccionValid;
+
+  function requestLocation() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeo({ ...INITIAL_GEO, status: 'unsupported', message: 'Este dispositivo no soporta GPS.' });
+      return;
+    }
+    setGeo((g) => ({ ...g, status: 'locating', message: null }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeo({
+          status: 'ok',
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy ?? null,
+          message: null
+        });
+      },
+      (err) => {
+        const msg =
+          err.code === err.PERMISSION_DENIED
+            ? 'Permiso de ubicación denegado. Actívalo en los ajustes del navegador.'
+            : err.code === err.POSITION_UNAVAILABLE
+            ? 'No se pudo determinar tu ubicación. Verifica el GPS.'
+            : err.code === err.TIMEOUT
+            ? 'Tiempo agotado al obtener ubicación. Reintenta.'
+            : 'Error al obtener ubicación.';
+        setGeo({
+          ...INITIAL_GEO,
+          status: err.code === err.PERMISSION_DENIED ? 'denied' : 'error',
+          message: msg
+        });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  function clearLocation() {
+    setGeo(INITIAL_GEO);
+  }
 
   if (count === 0) {
     return (
@@ -51,6 +120,12 @@ export function CartCheckout({ settings }: { settings: Settings }) {
     if (!formValid || sending) return;
     setSending(true);
 
+    // Construir la "dirección" de despacho según el tipo
+    let direccionFinal = form.direccion_despacho.trim();
+    if (ubicacionTipo === 'gps' && !direccionFinal && geo.lat != null) {
+      direccionFinal = `Ubicación GPS (${formatCoords(geo.lat, geo.lng!)})`;
+    }
+
     const quote = {
       items,
       subtotal,
@@ -60,8 +135,11 @@ export function CartCheckout({ settings }: { settings: Settings }) {
       cliente_telefono: form.cliente_telefono.trim(),
       cliente_email: form.cliente_email.trim() || undefined,
       comuna: form.comuna,
-      direccion_despacho: form.direccion_despacho.trim(),
-      observaciones: form.observaciones.trim() || undefined
+      direccion_despacho: direccionFinal,
+      observaciones: form.observaciones.trim() || undefined,
+      lat: geo.lat,
+      lng: geo.lng,
+      ubicacion_tipo: ubicacionTipo
     };
 
     let numero = `${Date.now().toString().slice(-6)}`;
@@ -100,6 +178,7 @@ export function CartCheckout({ settings }: { settings: Settings }) {
 
   return (
     <div className="grid lg:grid-cols-[1fr_380px] gap-4 items-start">
+      {/* CARRITO */}
       <div className="bg-white rounded-card shadow-card overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-text-primary">
@@ -124,7 +203,7 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                 className="relative w-full sm:w-24 h-24 bg-bg-sub rounded shrink-0 overflow-hidden"
               >
                 {it.imagen_url ? (
-                  <Image src={it.imagen_url} alt={it.nombre} fill sizes="96px" className="object-contain p-1" />
+                  <Image src={it.imagen_url} alt={it.nombre} fill sizes="96px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl text-text-tertiary">
                     {it.nombre.charAt(0)}
@@ -187,6 +266,7 @@ export function CartCheckout({ settings }: { settings: Settings }) {
         </ul>
       </div>
 
+      {/* SIDEBAR — datos de despacho + resumen */}
       <aside className="lg:sticky lg:top-32 space-y-4">
         <div className="bg-white rounded-card shadow-card p-4">
           <h3 className="font-semibold text-text-primary mb-3">Datos de despacho</h3>
@@ -232,26 +312,106 @@ export function CartCheckout({ settings }: { settings: Settings }) {
                 ))}
               </select>
             </div>
+
+            {/* Selector de tipo de ubicación */}
             <div>
-              <label className="label">Dirección *</label>
-              <input
-                className="input"
-                value={form.direccion_despacho}
-                onChange={(e) => setForm({ ...form, direccion_despacho: e.target.value })}
-                placeholder="Calle, número, referencia"
-              />
+              <label className="label">¿Cómo llegamos? *</label>
+              <div className="grid grid-cols-3 gap-1 bg-bg-sub rounded p-1">
+                <UbicacionTab
+                  active={ubicacionTipo === 'direccion'}
+                  onClick={() => setUbicacionTipo('direccion')}
+                  icon={<Home className="w-3.5 h-3.5" />}
+                  label="Dirección"
+                />
+                <UbicacionTab
+                  active={ubicacionTipo === 'gps'}
+                  onClick={() => setUbicacionTipo('gps')}
+                  icon={<Navigation className="w-3.5 h-3.5" />}
+                  label="GPS"
+                />
+                <UbicacionTab
+                  active={ubicacionTipo === 'referencia'}
+                  onClick={() => setUbicacionTipo('referencia')}
+                  icon={<Map className="w-3.5 h-3.5" />}
+                  label="Rural"
+                />
+              </div>
             </div>
+
+            {/* Panel adaptativo según tipo */}
+            {ubicacionTipo === 'direccion' && (
+              <div>
+                <label className="label">Calle, número y referencia *</label>
+                <input
+                  className="input"
+                  value={form.direccion_despacho}
+                  onChange={(e) => setForm({ ...form, direccion_despacho: e.target.value })}
+                  placeholder="Ej: O'Higgins 1234, depto 5B"
+                />
+                <GeoButton
+                  geo={geo}
+                  requestLocation={requestLocation}
+                  clearLocation={clearLocation}
+                  small
+                />
+              </div>
+            )}
+
+            {ubicacionTipo === 'gps' && (
+              <div className="bg-bg-sub rounded p-3 border border-gray-200">
+                <p className="text-2xs text-text-secondary mb-2">
+                  Para entregas en parcelas, fundos o sectores sin nombre de calle. Tu ubicación se enviará al ferretero como un link a Google Maps.
+                </p>
+                <GeoButton
+                  geo={geo}
+                  requestLocation={requestLocation}
+                  clearLocation={clearLocation}
+                />
+                <input
+                  className="input mt-2 text-xs"
+                  value={form.direccion_despacho}
+                  onChange={(e) => setForm({ ...form, direccion_despacho: e.target.value })}
+                  placeholder="Referencia adicional (opcional): casa azul, portón blanco…"
+                />
+              </div>
+            )}
+
+            {ubicacionTipo === 'referencia' && (
+              <div className="bg-bg-sub rounded p-3 border border-gray-200">
+                <p className="text-2xs text-text-secondary mb-2">
+                  Describe cómo llegar: caminos rurales, hitos visibles, km, color de portón, etc.
+                </p>
+                <textarea
+                  className="input min-h-[80px] text-sm"
+                  value={form.direccion_despacho}
+                  onChange={(e) => setForm({ ...form, direccion_despacho: e.target.value })}
+                  placeholder={'Ej: Camino Paraguay s/n, km 3.2 desde la ruta, casa amarilla a mano izquierda después del puente.'}
+                />
+                <p className="text-2xs text-text-secondary mt-2">
+                  Si puedes, suma tu GPS:
+                </p>
+                <GeoButton
+                  geo={geo}
+                  requestLocation={requestLocation}
+                  clearLocation={clearLocation}
+                  small
+                />
+              </div>
+            )}
+
             <div>
               <label className="label">Observaciones</label>
               <textarea
                 className="input min-h-[60px]"
                 value={form.observaciones}
                 onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+                placeholder="Horario disponible, indicaciones especiales…"
               />
             </div>
           </div>
         </div>
 
+        {/* RESUMEN */}
         <div className="bg-white rounded-card shadow-card p-4">
           <h3 className="font-semibold text-text-primary mb-3">Resumen</h3>
           <dl className="space-y-1.5 text-sm">
@@ -285,6 +445,113 @@ export function CartCheckout({ settings }: { settings: Settings }) {
           </p>
         </div>
       </aside>
+    </div>
+  );
+}
+
+/* ============================================================
+   COMPONENTES AUXILIARES
+   ============================================================ */
+
+function UbicacionTab({
+  active, onClick, icon, label
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded text-2xs font-semibold transition-colors ${
+        active ? 'bg-white shadow-card text-text-link' : 'text-text-secondary hover:bg-bg-hover'
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function GeoButton({
+  geo, requestLocation, clearLocation, small = false
+}: {
+  geo: GeoState;
+  requestLocation: () => void;
+  clearLocation: () => void;
+  small?: boolean;
+}) {
+  if (geo.status === 'ok' && geo.lat != null && geo.lng != null) {
+    return (
+      <div className={`${small ? 'mt-2' : ''} rounded border border-success/30 bg-green-50 p-2.5`}>
+        <div className="flex items-start gap-2">
+          <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-success">Ubicación capturada</p>
+            <p className="text-2xs text-text-secondary font-mono break-all">
+              {formatCoords(geo.lat, geo.lng)}
+            </p>
+            {geo.accuracy != null && (
+              <p className="text-2xs text-text-tertiary">
+                Precisión: ±{Math.round(geo.accuracy)} m
+              </p>
+            )}
+            <div className="flex gap-2 mt-1">
+              <a
+                href={mapsLink(geo.lat, geo.lng)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-2xs text-text-link hover:underline inline-flex items-center gap-0.5"
+              >
+                <MapPin className="w-3 h-3" /> Ver en mapa
+              </a>
+              <button
+                type="button"
+                onClick={clearLocation}
+                className="text-2xs text-text-secondary hover:text-danger"
+              >
+                Borrar
+              </button>
+              <button
+                type="button"
+                onClick={requestLocation}
+                className="text-2xs text-text-secondary hover:text-text-link ml-auto"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (geo.status === 'locating') {
+    return (
+      <button
+        type="button"
+        disabled
+        className={`${small ? 'mt-2' : ''} btn w-full px-3 py-2 bg-bg-sub text-text-secondary text-xs rounded border border-gray-200`}
+      >
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Obteniendo ubicación…
+      </button>
+    );
+  }
+
+  return (
+    <div className={small ? 'mt-2' : ''}>
+      <button
+        type="button"
+        onClick={requestLocation}
+        className="btn w-full px-3 py-2 bg-text-link text-white text-xs rounded hover:bg-blue-600"
+      >
+        <Locate className="w-3.5 h-3.5" /> Usar mi ubicación actual
+      </button>
+      {geo.message && (
+        <p className="text-2xs text-danger mt-1.5">{geo.message}</p>
+      )}
     </div>
   );
 }

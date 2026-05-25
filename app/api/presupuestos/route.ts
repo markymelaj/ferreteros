@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 
+const VALID_TIPOS = new Set(['direccion', 'gps', 'referencia']);
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -18,6 +20,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Datos de cliente requeridos' }, { status: 400 });
     }
 
+    // Validación de geolocalización
+    const ubicacion_tipo = VALID_TIPOS.has(body.ubicacion_tipo)
+      ? body.ubicacion_tipo
+      : 'direccion';
+
+    let lat: number | null = null;
+    let lng: number | null = null;
+    if (body.lat != null && body.lng != null) {
+      const latN = Number(body.lat);
+      const lngN = Number(body.lng);
+      if (
+        Number.isFinite(latN) && Number.isFinite(lngN) &&
+        latN >= -90 && latN <= 90 && lngN >= -180 && lngN <= 180
+      ) {
+        lat = latN;
+        lng = lngN;
+      }
+    }
+
+    // Si el tipo es 'gps' pero no llegaron coords válidas → error
+    if (ubicacion_tipo === 'gps' && (lat == null || lng == null)) {
+      return NextResponse.json(
+        { error: 'Tipo de ubicación GPS requiere coordenadas válidas' },
+        { status: 400 }
+      );
+    }
+
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('presupuestos')
@@ -31,7 +60,10 @@ export async function POST(req: NextRequest) {
         cliente_email: body.cliente_email ?? null,
         comuna: body.comuna ?? null,
         direccion_despacho: body.direccion_despacho ?? null,
-        observaciones: body.observaciones ?? null
+        observaciones: body.observaciones ?? null,
+        lat,
+        lng,
+        ubicacion_tipo
       })
       .select('id, fecha')
       .single();
