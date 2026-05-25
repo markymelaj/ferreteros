@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,21 +21,31 @@ export default function AdminLoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setSending(true);
+    setSubmitting(true);
     setError(null);
-    setMessage(null);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin`
-      }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password
     });
 
-    if (error) setError(error.message);
-    else setMessage('Te enviamos un enlace mágico a tu correo. Revisa tu inbox.');
-    setSending(false);
+    if (error) {
+      // Mensajes en español para los casos comunes
+      const msg = error.message.toLowerCase();
+      if (msg.includes('invalid login credentials')) {
+        setError('Correo o contraseña incorrectos.');
+      } else if (msg.includes('email not confirmed')) {
+        setError('El correo aún no está confirmado. Confírmalo desde Supabase o usa "Auto Confirm User" al crearlo.');
+      } else {
+        setError(error.message);
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    // Login OK → forzamos navegación dura para que el middleware revalide
+    window.location.href = '/admin';
   }
 
   return (
@@ -45,32 +55,52 @@ export default function AdminLoginPage() {
           Admin
         </h1>
         <p className="text-sm text-navy/70 mb-6">
-          Acceso restringido. Ingresa tu correo autorizado.
+          Acceso restringido. Ingresa tus credenciales.
         </p>
 
         <form onSubmit={handleLogin} className="space-y-3">
           <div>
             <label className="label">Correo</label>
-            <input
-              type="email"
-              required
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.cl"
-            />
+            <div className="relative">
+              <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-navy/50 pointer-events-none" />
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                className="input pl-9"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.cl"
+              />
+            </div>
           </div>
 
-          <button type="submit" disabled={sending} className="btn-brutal w-full">
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-            Enviar link de acceso
+          <div>
+            <label className="label">Contraseña</label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-navy/50 pointer-events-none" />
+              <input
+                type="password"
+                required
+                minLength={6}
+                autoComplete="current-password"
+                className="input pl-9"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <button type="submit" disabled={submitting} className="btn-brutal w-full">
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+            {submitting ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
 
-        {message && (
-          <p className="mt-4 text-sm text-whatsapp font-semibold">{message}</p>
+        {error && (
+          <p className="mt-4 text-sm text-red-600">{error}</p>
         )}
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       </div>
     </div>
   );
