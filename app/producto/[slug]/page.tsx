@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ChevronRight, Truck, ShieldCheck, MessageCircle, Tag, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase-server';
 import { ProductCard } from '@/components/ProductCard';
+import { ProductGallery } from '@/components/ProductGallery';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { formatCLP, effectivePrice, discountPct, whatsappLink } from '@/lib/format';
 import type { Product, Category, Settings } from '@/lib/types';
@@ -100,27 +101,13 @@ export default async function ProductoPage({ params }: { params: { slug: string 
           <div className="grid lg:grid-cols-[1.4fr_1fr]">
             {/* GALLERY */}
             <div className="p-6 border-r border-gray-100">
-              <div className="aspect-square bg-bg-sub rounded relative overflow-hidden">
-                {product.imagen_url ? (
-                  <Image
-                    src={product.imagen_url}
-                    alt={product.nombre}
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="object-contain p-6"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-text-tertiary text-9xl">
-                    {product.nombre.charAt(0)}
-                  </div>
-                )}
-                {desc > 0 && (
-                  <span className="absolute top-4 left-4 badge-danger text-sm px-3 py-1">
-                    -{desc}% OFF
-                  </span>
-                )}
-              </div>
+              <ProductGallery
+                cover={product.imagen_url}
+                gallery={product.imagenes_galeria ?? []}
+                alt={product.nombre}
+                fallbackChar={product.nombre.charAt(0)}
+                discountBadge={desc}
+              />
             </div>
 
             {/* INFO */}

@@ -26,6 +26,7 @@ export interface Product {
   activo: boolean;
   tipo: ProductTipo;
   imagen_url: string | null;
+  imagenes_galeria: string[];
   categoria?: Category;
 }
 
