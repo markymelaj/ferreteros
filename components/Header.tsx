@@ -33,7 +33,7 @@ export function Header({ settings }: { settings: Settings | null }) {
     <header className="sticky top-0 z-40 bg-brand-500 shadow-nav">
       {/* Línea principal — logo, search, carrito */}
       <div className="container-page py-2.5">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-9 h-9 bg-ink-900 text-brand-500 flex items-center justify-center font-bold text-lg rounded">
@@ -46,12 +46,12 @@ export function Header({ settings }: { settings: Settings | null }) {
           </Link>
 
           {/* Search */}
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 min-w-0 max-w-2xl">
             <SearchBar />
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Ubicación */}
             <button className="hidden md:flex items-center gap-1 text-xs text-ink-900 hover:text-ink-700 px-2 py-1">
               <MapPin className="w-4 h-4" />
@@ -66,7 +66,7 @@ export function Header({ settings }: { settings: Settings | null }) {
             {/* Carrito */}
             <Link
               href="/carrito"
-              className="relative flex items-center gap-1.5 px-3 py-2 hover:bg-brand-400/50 rounded transition-colors"
+              className="relative flex items-center gap-1.5 px-2 sm:px-3 py-2 hover:bg-brand-400/50 rounded transition-colors"
               aria-label="Carrito"
             >
               <ShoppingCart className="w-5 h-5 text-ink-900" />
