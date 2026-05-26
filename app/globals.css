@@ -12,10 +12,6 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  /* Red de seguridad: previene desborde horizontal global sin romper sticky.
-     `clip` no crea contexto de formato (a diferencia de `hidden`), por lo que
-     los `sticky top-0` del Header y AdminShell siguen funcionando. */
-  overflow-x: clip;
 }
 
 body {
@@ -24,6 +20,9 @@ body {
   font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Red de seguridad: previene desborde horizontal global.
+     En body (no html) para no afectar position:fixed (WhatsApp float) en Android. */
+  overflow-x: hidden;
 }
 
 /* Botones */
