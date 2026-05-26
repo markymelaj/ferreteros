@@ -1,222 +1,152 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Search, X, Loader2 } from 'lucide-react';
-import { formatCLP, effectivePrice } from '@/lib/format';
-import type { Product, Maquinaria } from '@/lib/types';
+import { useState } from 'react';
+import { Menu, X, ShoppingCart, MapPin, ChevronDown, Phone } from 'lucide-react';
+import { useCart } from '@/lib/cart';
+import { SearchBar } from './SearchBar';
+import type { Settings } from '@/lib/types';
 
-interface SearchResults {
-  productos: Product[];
-  maquinaria: Maquinaria[];
-  total: number;
-}
+const NAV = [
+  { href: '/materiales', label: 'Materiales' },
+  { href: '/aridos',     label: 'Áridos' },
+  { href: '/arriendo',   label: 'Arriendo' },
+  { href: '/contacto',   label: 'Contacto' }
+];
 
-export function SearchBar() {
-  const router = useRouter();
-  const [q, setQ] = useState('');
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<SearchResults | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+const CATEGORIES_TOP = [
+  { slug: 'construccion', label: 'Construcción' },
+  { slug: 'electrico',    label: 'Eléctrico' },
+  { slug: 'gasfiteria',   label: 'Gasfitería' },
+  { slug: 'herramientas', label: 'Herramientas' },
+  { slug: 'pinturas',     label: 'Pinturas' },
+  { slug: 'jardin',       label: 'Jardín y Riego' }
+];
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (q.trim().length < 2) {
-      setResults(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/buscar?q=${encodeURIComponent(q.trim())}`);
-        const data = await res.json();
-        setResults(data);
-      } catch {
-        setResults(null);
-      } finally {
-        setLoading(false);
-      }
-    }, 250);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [q]);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        inputRef.current?.focus();
-        setOpen(true);
-      }
-      if (e.key === 'Escape') {
-        setOpen(false);
-        inputRef.current?.blur();
-      }
-    }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, []);
-
-  const goToFullResults = useCallback(() => {
-    if (q.trim()) {
-      router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
-      setOpen(false);
-    }
-  }, [q, router]);
-
-  const showPanel = open && q.trim().length >= 2;
+export function Header({ settings }: { settings: Settings | null }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { count } = useCart();
+  const nombre = settings?.nombre_ferreteria ?? 'Nexo Sur';
+  const comunas = settings?.comunas_despacho ?? [];
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      <div className="flex items-center bg-white rounded shadow-sm">
-        <input
-          ref={inputRef}
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onFocus={() => setOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              goToFullResults();
-            }
-          }}
-          placeholder="Buscar materiales, áridos, máquinas y más..."
-          className="flex-1 px-4 py-2.5 text-sm bg-transparent text-text-primary placeholder:text-text-tertiary focus:outline-none rounded-l"
-        />
-        {q && (
-          <button
-            onClick={() => { setQ(''); inputRef.current?.focus(); }}
-            className="px-2 text-text-tertiary hover:text-text-primary"
-            aria-label="Limpiar"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-        <button
-          onClick={goToFullResults}
-          className="px-4 py-2.5 text-text-secondary hover:text-text-primary border-l border-gray-200"
-          aria-label="Buscar"
-        >
-          <Search className="w-5 h-5" />
-        </button>
+    <header className="sticky top-0 z-40 bg-brand-500 shadow-nav">
+      {/* Línea principal — logo, search, carrito */}
+      <div className="container-page py-2.5">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-9 h-9 bg-ink-900 text-brand-500 flex items-center justify-center font-bold text-lg rounded">
+              N
+            </div>
+            <div className="hidden sm:block">
+              <div className="font-bold text-ink-900 text-base leading-tight">{nombre}</div>
+              <div className="text-2xs text-ink-700 leading-tight">Ferretería · Áridos · Arriendo</div>
+            </div>
+          </Link>
+
+          {/* Search */}
+          <div className="flex-1 min-w-0 max-w-2xl">
+            <SearchBar />
+          </div>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Ubicación */}
+            <button className="hidden md:flex items-center gap-1 text-xs text-ink-900 hover:text-ink-700 px-2 py-1">
+              <MapPin className="w-4 h-4" />
+              <div className="text-left">
+                <div className="text-2xs leading-tight">Despacho a</div>
+                <div className="font-semibold leading-tight flex items-center gap-0.5">
+                  {comunas[0] ?? 'Tu comuna'} <ChevronDown className="w-3 h-3" />
+                </div>
+              </div>
+            </button>
+
+            {/* Carrito */}
+            <Link
+              href="/carrito"
+              className="relative flex items-center gap-1.5 px-2 sm:px-3 py-2 hover:bg-brand-400/50 rounded transition-colors"
+              aria-label="Carrito"
+            >
+              <ShoppingCart className="w-5 h-5 text-ink-900" />
+              <span className="hidden md:inline text-sm font-semibold text-ink-900">Carrito</span>
+              {count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-text-link text-white text-2xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {count}
+                </span>
+              )}
+            </Link>
+
+            {/* Mobile menu */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-2 text-ink-900"
+              aria-label="Menú"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {showPanel && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded shadow-card-hover max-h-[70vh] overflow-y-auto z-50 border border-gray-200">
-          {loading && (
-            <div className="p-4 flex items-center gap-2 text-text-secondary text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Buscando…
-            </div>
-          )}
+      {/* Tira de categorías */}
+      <div className="hidden lg:block bg-brand-400/50 border-t border-brand-600/20">
+        <div className="container-page">
+          <nav className="flex items-center gap-1 text-sm overflow-x-auto scrollbar-hide">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className="px-3 py-2 text-ink-900 hover:text-ink-700 font-semibold whitespace-nowrap"
+              >
+                {n.label}
+              </Link>
+            ))}
+            <span className="w-px h-4 bg-ink-900/20 mx-1" />
+            {CATEGORIES_TOP.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/categoria/${c.slug}`}
+                className="px-3 py-2 text-ink-900/80 hover:text-ink-900 whitespace-nowrap"
+              >
+                {c.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
 
-          {!loading && results && results.total === 0 && (
-            <div className="p-4 text-sm text-text-secondary">
-              Sin resultados para <strong>"{q}"</strong>.
+      {/* Mobile menu drawer */}
+      {menuOpen && (
+        <div className="lg:hidden bg-white border-t border-brand-600/20 shadow-card">
+          <nav className="container-page py-3 flex flex-col">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                onClick={() => setMenuOpen(false)}
+                className="py-2.5 text-sm font-semibold text-ink-900 border-b border-gray-100"
+              >
+                {n.label}
+              </Link>
+            ))}
+            <div className="pt-3 pb-1 text-2xs uppercase tracking-wider text-text-secondary font-semibold">
+              Categorías
             </div>
-          )}
-
-          {!loading && results && results.productos.length > 0 && (
-            <div>
-              <h4 className="px-4 py-2 bg-bg-sub text-2xs font-bold uppercase tracking-wider text-text-secondary">
-                Productos · {results.productos.length}
-              </h4>
-              <ul>
-                {results.productos.slice(0, 6).map((p) => {
-                  const price = effectivePrice(p.precio, p.precio_oferta);
-                  return (
-                    <li key={p.id}>
-                      <Link
-                        href={`/producto/${p.slug}`}
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-sub transition-colors"
-                      >
-                        <div className="relative w-12 h-12 bg-bg-sub shrink-0 overflow-hidden rounded">
-                          {p.imagen_url ? (
-                            <Image src={p.imagen_url} alt={p.nombre} fill sizes="48px" className="object-contain" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-text-tertiary text-xs">
-                              {p.nombre.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-text-primary truncate">{p.nombre}</p>
-                          <p className="text-2xs text-text-secondary">
-                            {p.tipo === 'arido' ? 'Árido · ' : ''}
-                            <span className="text-text-primary font-semibold">{formatCLP(price)}</span> / {p.unidad}
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-
-          {!loading && results && results.maquinaria.length > 0 && (
-            <div>
-              <h4 className="px-4 py-2 bg-bg-sub text-2xs font-bold uppercase tracking-wider text-text-secondary">
-                Arriendo · {results.maquinaria.length}
-              </h4>
-              <ul>
-                {results.maquinaria.slice(0, 3).map((m) => (
-                  <li key={m.id}>
-                    <Link
-                      href={`/arriendo/${m.slug}`}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-sub transition-colors"
-                    >
-                      <div className="relative w-12 h-12 bg-bg-sub shrink-0 overflow-hidden rounded">
-                        {m.imagen_url ? (
-                          <Image src={m.imagen_url} alt={m.nombre} fill sizes="48px" className="object-contain" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-text-tertiary text-xs">
-                            {m.nombre.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-text-primary truncate">{m.nombre}</p>
-                        <p className="text-2xs text-text-secondary">
-                          Arriendo · <span className="text-text-primary font-semibold">{formatCLP(m.tarifa_dia)}</span> / día
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {!loading && results && results.total > 0 && (
-            <button
-              onClick={goToFullResults}
-              className="w-full px-4 py-2.5 text-sm font-semibold text-text-link hover:bg-bg-sub border-t border-gray-200"
-            >
-              Ver todos los resultados →
-            </button>
-          )}
+            {CATEGORIES_TOP.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/categoria/${c.slug}`}
+                onClick={() => setMenuOpen(false)}
+                className="py-2 text-sm text-text-primary border-b border-gray-100"
+              >
+                {c.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       )}
-    </div>
+    </header>
   );
 }
