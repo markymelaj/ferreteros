@@ -12,6 +12,10 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* Red de seguridad: previene desborde horizontal global sin romper sticky.
+     `clip` no crea contexto de formato (a diferencia de `hidden`), por lo que
+     los `sticky top-0` del Header y AdminShell siguen funcionando. */
+  overflow-x: clip;
 }
 
 body {

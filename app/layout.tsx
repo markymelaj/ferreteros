@@ -2,9 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/lib/cart';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { WhatsAppFloat } from '@/components/WhatsAppFloat';
 import { createClient } from '@/lib/supabase-server';
 
 const sans = Inter({
@@ -38,51 +35,23 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({
+/**
+ * Root layout MÍNIMO.
+ * Solo html, body, fuentes, CartProvider y metadata global.
+ *
+ * El chrome del sitio público (Header, Footer, WhatsAppFloat, JSON-LD) vive en
+ * app/(public)/layout.tsx — así el admin no lo arrastra encima.
+ * El shell del admin vive en app/admin/layout.tsx.
+ */
+export default function RootLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
-  const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).single();
-
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ferreteria-piloto.vercel.app';
-  const localBusinessLd = settings ? {
-    '@context': 'https://schema.org',
-    '@type': 'HardwareStore',
-    name: settings.nombre_ferreteria,
-    description: settings.descripcion_seo,
-    url: baseUrl,
-    telephone: settings.telefono_whatsapp,
-    email: settings.email,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: settings.direccion_fisica,
-      addressLocality: 'Los Ángeles',
-      addressRegion: 'Región del Biobío',
-      addressCountry: 'CL'
-    },
-    areaServed: (settings.comunas_despacho ?? []).map((c: string) => ({
-      '@type': 'City', name: c
-    })),
-    priceRange: '$$'
-  } : null;
-
   return (
     <html lang="es" className={sans.variable}>
       <body className="font-sans min-h-screen flex flex-col">
-        {localBusinessLd && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}
-          />
-        )}
-        <CartProvider>
-          <Header settings={settings} />
-          <main className="flex-1">{children}</main>
-          <Footer settings={settings} />
-          <WhatsAppFloat phone={settings?.telefono_whatsapp ?? '+56957845292'} />
-        </CartProvider>
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   );
